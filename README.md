@@ -2,53 +2,144 @@
 
 [![License](https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-nc-sa.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh)
 
+《偶像大师 闪耀色彩 棱镜之歌》（SCSP）简体中文翻译数据仓库。
 
+当前维护分支为 `TransData`。本仓库只保存公开的翻译数据与辅助文件，不包含游戏客户端、账号信息、运行日志、抓包、私有服务端或个人本地运行环境。
 
-- SCSP 简体中文翻译数据仓库。
+## 与 scsp-localify 的关系
 
-当前维护分支为 `TransData`。本仓库只保存公开的翻译数据与相关辅助文件，不包含游戏客户端、账号信息、运行日志、抓包、私有服务端或本地运行环境。
+公开插件仓库：[kohakunamori/scsp-localify](https://github.com/kohakunamori/scsp-localify)
 
-## 与插件仓库的关系
+`scsp-localify` 将本仓库作为 `resources/schinese` Git submodule 使用，因此插件仓库会固定到一个明确的翻译数据 commit。翻译内容本身保持 `scsp_localify/...` 目录结构，可以直接作为插件的本地化数据目录使用。
 
-- 公开插件仓库：[kohakunamori/scsp-localify](https://github.com/kohakunamori/scsp-localify)
-- `scsp-localify` 通过 `resources/schinese` Git submodule 固定引用本仓库的已验证翻译版本。
-- 翻译文件保持 `scsp_localify/...` 目录结构，供插件直接打包或加载。
-- 与客户端保存、离线服务、个人环境有关的内容不属于本仓库，也不应提交到本仓库。
+## 分支
 
+- `TransData`：当前简体中文翻译数据，也是默认维护分支。
+- `DumpData`：原始 Dump 数据参考。该分支可能落后于当前客户端，不应默认认为它就是最新原文。
 
+提交译文前，推荐优先使用当前客户端实际 Dump 的文本与 `DumpData` 交叉确认。
 
-# 贡献翻译
+## 当前数据内容
+
+`scsp_localify/` 目前主要包含：
+
+| 路径 | 用途 |
+| --- | --- |
+| `localify.json` | Localify 主文本表，按表/键组织 |
+| `local2.json` | 不经过主 Localify 表的字符串映射 |
+| `lyrics.json` | 歌词映射 |
+| `scenario/` | 剧情/场景 JSON，本仓库当前包含 5,000+ 个 scenario JSON |
+| `scsp-bundle` | 本地化使用的资源包 |
+| `story-text-map.bin` | 剧情文本辅助映射数据 |
+| `update_local_json.py` | 将旧 `localify.json` 译文迁移到新 Dump 的辅助脚本 |
+
+当前 2.17 数据已经覆盖主文本、local2、歌词和大规模 scenario 数据。覆盖范围不等于每一行都需要被翻译：专有名词、占位符、资源键、程序标记以及本身就应保持原样的内容可能有意保留。
+
+## 使用方法
+
+### 直接使用
+
+如果你使用 [kohakunamori/scsp-localify](https://github.com/kohakunamori/scsp-localify)，推荐直接使用插件仓库中固定的 submodule 版本：
+
+```bash
+git clone --recursive https://github.com/kohakunamori/scsp-localify.git
+```
+
+已有仓库可执行：
+
+```bash
+git submodule update --init --recursive
+```
+
+插件默认的 `localifyBasePath` 是 `scsp_localify`。使用独立下载的本仓库时，将本仓库中的 `scsp_localify` 目录放到插件可读取的位置即可。
+
+### 单独克隆翻译仓库
+
+```bash
+git clone -b TransData https://github.com/kohakunamori/SCSPTranslationData.git
+```
+
+只需要翻译数据时，不必下载或提交任何游戏文件。
+
+## 更新 localify.json
+
+当游戏更新后得到新的 `localify.json` Dump，可以用仓库自带脚本尽量保留已有译文：
+
+```bash
+cd scsp_localify
+python update_local_json.py
+```
+
+脚本会依次询问：
+
+1. 旧翻译文件路径，直接回车默认使用 `localify.json`；
+2. 新 Dump 文件路径。
+
+对于新 Dump 中仍存在、且旧翻译中已有的 `category/key`，脚本会保留旧译文，并输出 `new_localify.json`。
+
+这个脚本只负责键级迁移，不会判断原文语义是否发生变化。游戏大版本更新后仍需要人工或工具复核变更项。
 
 ## 获取原文
 
-- 前往 [DumpData](https://github.com/kohakunamori/SCSPTranslationData/tree/DumpData) 分支寻找。
-- 或使用 [scsp-localify 的文本 Dump 功能](https://github.com/kohakunamori/scsp-localify#%E8%87%AA%E8%A1%8C-dump-%E5%8E%9F%E6%96%87) 获取当前客户端实际原文（推荐）。
-  - `DumpData` 可能落后于当前客户端；提交译文前应尽量确认原文仍然匹配。
+推荐顺序：
 
+1. 使用 [scsp-localify 的 Dump 功能](https://github.com/kohakunamori/scsp-localify#文本-dump-与翻译) 获取当前客户端实际文本；
+2. 与本仓库 `DumpData` 分支进行对照；
+3. 确认键、原文和上下文后再修改 `TransData`。
 
+主文本、local2、歌词和 scenario 的加载路径不同，新增文本不一定只会出现在 `localify.json`。
 
-## 提交翻译
+## 贡献翻译
 
-- 找到您想翻译的文件，将其翻译后，以 **相同路径** 提交 Pull requests 到本分支即可。
-- 初始提交的文本为机翻润色，仅用于抛砖引玉。**之后不允许提交机翻文本**。
+请从 `TransData` 创建修改，并保持文件路径和 JSON 结构不变。
 
+提交前建议确认：
 
+- 不修改 JSON key、scenario key 或资源标识，只修改确实属于用户可见文本的 value；
+- 保留 `\n`、富文本标签、`<sprite>`、格式化占位符等控制内容；
+- 人名、组合名、歌曲名和固定术语尽量保持全仓库一致；
+- 不把调试日志、Dump 临时文件、游戏资源、账号信息或个人路径提交进仓库；
+- 大批量翻译应进行术语一致性、占位符完整性、重复文本一致性和残留日文检查；
+- 机器辅助翻译可以用于批处理，但提交前必须经过质量检查，不能把未经复核的原始机翻直接作为最终译文。
 
-### 机翻润色文件表
+Pull Request 请说明修改范围，例如“歌词”“某一剧情系列”“某个主表”或“客户端更新后的键同步”。
 
-- 修改这些部分不需要经过我的同意。提交更改时，请将对应部分从下表删除。当下表为空后，可以删除 `机翻润色文件表`。
+## 翻译质量建议
 
-| 文件                                                         | 内容                                                         | 备注           |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | -------------- |
-| `scsp_localify`/`local2.json`                                | 全部                                                         | -              |
-| `scsp_localify`/`localify.json`                              | `mlMaintenance_TextFormatTile`<br>`mlMenu_Button`<br>`mlMenu_Header` | 其它部分未翻译 |
-| `scsp_localify`/`scenario`/`s40`/`04040000`/`s40_04040000_01.json`<br>`scsp_localify`/`scenario`/`s40`/`04040000`/`s40_04040000_02.json` | 全部                                                         | -              |
+批量处理时推荐至少做以下检查：
 
+- JSON 能正常解析；
+- key 数量没有意外减少；
+- 占位符、富文本标签和换行结构未被破坏；
+- 同一原文在同一语境下尽量使用一致译法；
+- 人名与官方/既有译名一致；
+- 对仍包含日文假名的结果做二次筛查；
+- 对“原文 = 译文”的条目区分程序标记、专名、无需翻译内容和真正漏译，不要机械替换。
 
+## 隐私与仓库边界
 
+本仓库是公开翻译数据仓库。请勿提交：
 
+- 游戏客户端或官方资源原文件；
+- 账号、Cookie、Token、启动参数；
+- 日志、抓包、崩溃 Dump；
+- 私钥、证书；
+- 个人用户名、绝对本地路径或私人项目结构；
+- 与公开翻译数据无关的私有服务端/运行环境资料。
 
-# 贡献者（GitHub）
-<a href="https://github.com/ShinyGroup/SCSPTranslationData/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=ShinyGroup/SCSPTranslationData" />
+## 上游与贡献者
+
+本 fork 基于社区 SCSP 翻译数据持续维护。上游项目与历史贡献可以参考：
+
+- [ShinyGroup/SCSPTranslationData](https://github.com/ShinyGroup/SCSPTranslationData)
+- [chinosk6/SCSPTranslationData](https://github.com/chinosk6/SCSPTranslationData)
+
+当前 fork 的提交记录与贡献者：
+
+<a href="https://github.com/kohakunamori/SCSPTranslationData/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=kohakunamori/SCSPTranslationData" />
 </a>
+
+## License
+
+翻译数据沿用仓库现有许可，详见 [LICENSE](LICENSE)。
