@@ -17,7 +17,7 @@
 - `TransData`：当前简体中文翻译数据，也是默认维护分支。
 - `DumpData`：原始 Dump 数据参考。该分支可能落后于当前客户端，不应默认认为它就是最新原文。
 
-提交译文前，`localify` 应优先使用仓库内 `qa/current-source/` 的当前版本 snapshot；其他 surface 再使用独立验证的当前客户端 Dump。历史 `DumpData` 仅用于兼容/对照，不应作为最新原文假设。
+提交译文前，`localify` 与当前 Drama 应优先使用仓库内 `qa/current-source/` 的当前版本 snapshot；其他 surface 再使用独立验证的当前客户端 Dump。历史 `DumpData` 仅用于兼容/对照，不应作为最新原文假设。
 
 ## 当前数据内容
 
@@ -28,12 +28,13 @@
 | `localify.json` | Localify 主文本表，按表/键组织 |
 | `local2.json` | 不经过主 Localify 表的字符串映射 |
 | `lyrics.json` | 歌词映射 |
+| `drama.json` | SCSP 2.17 当前 Drama 对话翻译，运行时按 `uniqueId + source` 精确匹配 |
 | `scenario/` | 剧情/场景 JSON，本仓库当前包含 5,000+ 个 scenario JSON |
 | `scsp-bundle` | 本地化使用的资源包 |
 | `story-text-map.bin` | 剧情文本辅助映射数据 |
 | `update_local_json.py` | 将旧 `localify.json` 译文迁移到新 Dump 的辅助脚本 |
 
-当前 2.17 数据已经覆盖主文本、local2、歌词和大规模 scenario 数据。覆盖范围不等于每一行都需要被翻译：专有名词、占位符、资源键、程序标记以及本身就应保持原样的内容可能有意保留。
+当前 2.17 数据已经覆盖主文本、current Drama、local2、歌词和大规模 legacy scenario 数据。覆盖范围不等于每一行都需要被翻译：专有名词、占位符、资源键、程序标记以及本身就应保持原样的内容可能有意保留。
 
 ## 面向 Agent 与社区协作
 
@@ -59,10 +60,12 @@ GitHub 侧也提供了翻译质量 / source update Issue 表单与 Pull Request 
 - `qa/rules.json`：结构、格式、隐私与各文本表面的 QA 策略；
 - `qa/baseline-exceptions.json`：公开记录引入 QA 前已经存在的窄范围历史例外，新问题不会因此被放过；
 - `qa/backlog-policy.json`：将 QA warning 映射为 P1/P2/P3 社区 review 任务；
-- `qa/current-source/`：公开的 SCSP 2.17.0 `localizetext` 当前原文快照、历史 overlap scope 与可验证 manifest；
+- `qa/current-source/`：公开的 SCSP 2.17.0 `localizetext` 与 Drama 当前原文快照、可验证 manifest 与 review context；
 - `qa/schemas/`：Agent batch/result 的公开 JSON Schema；
 - `tools/qa.py`：统一质量检查入口；
 - `tools/audit_current_localizetext.py`：针对完整 current 2.17 `localizetext` universe 的 authoritative coverage/kana closure gate；
+- `tools/audit_current_drama.py`：针对当前 2.17 Drama consumer source 的 runtime-key coverage / identity / kana gate；
+- `tools/prepare_drama_review.py`：生成包含 scenario、speaker、前后文、source/translation 的 Agent/human review JSONL；
 - `tools/build_translation_memory.py`：从公开的 `TransData` 与 `DumpData` 对齐生成 Translation Memory。
 - `tools/build_quality_backlog.py`：把 repository-wide warning 去重并整理成稳定、可筛选的社区质量任务；
 - `tools/canonicalize_exact_source_conflicts.py`：检测严格可复现的 exact-source 双译分叉；默认只生成 proposal，`--apply` 才会修改 `local2.json`；
@@ -90,6 +93,25 @@ python tools/audit_current_localizetext.py
 历史 `DumpData` 的 localify 只有 44,860 行，其中仅 39,711 个 table/key 仍存在于当前 2.17；这部分又有 **3,596 / 39,711（9.06%）** 的原文已经改变，且当前版本另有 **98,325** 行从未出现在旧 Dump 中。因此，对于 `localify` table/key，社区和 Agent 应优先使用 current snapshot，而不是把 `DumpData` 当成当前原文。
 
 完整格式、hash、历史对比和使用边界见 [Current SCSP 2.17 Source Snapshot](docs/current-source-snapshot.md)。
+
+同一目录现在还公开当前 2.17 Drama consumer source：
+
+- **267 / 267 scenarios resolved**；
+- **11,402 current dialogue rows**；
+- 运行时键 `uniqueId + source`：**11,402 unique / 0 duplicate**；
+- 公开 `scsp_localify/drama.json`：**11,402 / 11,402 mapped**；
+- **0 missing / 0 extra / 0 metadata mismatch / 0 target kana / 0 empty translation**；
+- 621 条 source-equal 中，31 条为 Han-only、590 条为 safe/non-kana 文本；
+- source snapshot 仅包含 scenario identity、schema、speaker、source 和前后文，不包含 bundle、manifest、asset/path ID 或私人运行环境信息。
+
+运行：
+
+```bash
+python tools/audit_current_drama.py
+python tools/prepare_drama_review.py --source-equal-only --max-items 50
+```
+
+Drama 与旧 `scenario/**/*.json` 是不同 surface：前者来自当前 2.17 的 `DramaSubtitlePlayableAsset` consumer（必要时使用经过验证的 Sujigaki fallback），后者仍保留自己的 legacy JSON/provenance 规则。公开 Drama snapshot 不应被解释为 legacy scenario source 已全部升级为 current。
 
 ### 运行 QA
 

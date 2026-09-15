@@ -37,7 +37,7 @@ Raw, unreviewed machine translation should not be submitted as the final dataset
 
 Follow `docs/version-update-workflow.md`.
 
-The `DumpData` branch is useful historical source material but can lag the current client. For `localify`, prefer the bundled current-version snapshot under `qa/current-source/`; for other surfaces, prefer independently verified current-client source data.
+The `DumpData` branch is useful historical source material but can lag the current client. For `localify` and current Drama, prefer the bundled current-version snapshots under `qa/current-source/`; for legacy scenario and other surfaces, prefer independently verified current-client source data.
 
 ## Repository invariants
 
@@ -58,6 +58,7 @@ Run:
 python -m unittest discover -s tools -p "test_*.py"
 python tools/qa.py
 python tools/audit_current_localizetext.py
+python tools/audit_current_drama.py
 python tools/canonicalize_exact_source_conflicts.py --check
 python tools/build_quality_backlog.py --check-current-key
 git diff --check
@@ -75,7 +76,9 @@ python tools/build_translation_memory.py
 
 Generated output goes under `qa/generated/` and is not committed by default.
 
-The current SCSP 2.17 `localizetext` source anchor is committed under `qa/current-source/`. Do not replace it with a local dump or regenerate its manifest without documenting the client version, deterministic hashes, and source-universe counts. See [docs/current-source-snapshot.md](docs/current-source-snapshot.md).
+The current SCSP 2.17 `localizetext` and Drama source anchors are committed under `qa/current-source/`. Do not replace them with a local dump or regenerate their manifests without documenting the client version, deterministic hashes, and source-universe counts. See [docs/current-source-snapshot.md](docs/current-source-snapshot.md).
+
+For current Drama edits, preserve `scenarioId`, `sourceSchema`, `uniqueId`, `source`, and `talkerName`; edit only `text`. The runtime key is exact `uniqueId + source`, and `uniqueId` alone is not a safe identity.
 
 For an actionable, deduplicated quality-debt view:
 

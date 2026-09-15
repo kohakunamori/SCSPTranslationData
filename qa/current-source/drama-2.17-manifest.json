@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "game_version": "2.17.0",
+  "surface": "drama",
+  "resource": "DramaSubtitlePlayableAsset/SujigakiLinePlayableAsset selected dialogue",
+  "format": "gzip-compressed JSON with scenario-ordered source/context records",
+  "expected_scenarios": 267,
+  "resolved_scenarios": 267,
+  "scenarios_with_dialogue": 266,
+  "zero_dialogue_scenarios": [
+    "s44_01140102_00"
+  ],
+  "fallback_scenarios": [
+    "s44_01140101_00"
+  ],
+  "source_rows": 11402,
+  "runtime_key_count": 11402,
+  "duplicate_runtime_keys": 0,
+  "duplicate_unique_id_scenario_count": 8,
+  "source_schema_counts": {
+    "DramaSubtitlePlayableAsset": 11348,
+    "SujigakiLinePlayableAsset": 54
+  },
+  "selection_rule": "Prefer DramaSubtitlePlayableAsset consumer rows; if absent use nonempty SujigakiLinePlayableAsset text.message; verified control-only timelines may yield zero rows.",
+  "source_snapshot_uncompressed_bytes": 7952334,
+  "source_snapshot_uncompressed_sha256": "3e2256bc909210e2fec06517d3693abb6bf369401429a78fe9b8ce27a15b9dc9",
+  "source_snapshot_gzip_bytes": 1522193,
+  "source_snapshot_gzip_sha256": "63bf5d7daa5e48c6a1d898320e3af35d0a5745ab5c333328cd904796c8ff22fc",
+  "provenance": "current-client-drama-source-snapshot",
+  "privacy": "source dialogue and review context only; excludes bundle names/hashes, manifest metadata, asset/path IDs, local paths, accounts, runtime logs, and private integration metadata"
+}

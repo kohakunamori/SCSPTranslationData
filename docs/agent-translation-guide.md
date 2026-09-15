@@ -52,7 +52,7 @@ For bulk work, give each source a stable record rather than asking a model to ed
 }
 ```
 
-For scenario work, use scenario path/key and nearby dialogue as context.
+For legacy scenario work, use scenario path/key and nearby dialogue as context. For current Drama, use the published collision-safe identity, exact runtime `uniqueId + source` key, and previous/next source context.
 
 The repository can generate these records directly:
 
@@ -73,6 +73,15 @@ Never mark historical `DumpData` authoritative simply to make more rows availabl
 If all maintained source-key text is already resolved, the default Agent batch can legitimately be empty. The batch keeps legacy DumpData alignment semantics and therefore must not be interpreted as a complete current-version defect inventory.
 
 For `localify`, current-source verification no longer requires a private dump: use `qa/current-source/localizetext-2.17-source.json.gz` and its manifest. The current public audit already proves 138,036/138,036 mapped with zero actionable current rows. Historical `DumpData` remains relevant for compatibility/history; scenario source verification remains a separate problem.
+
+Current Drama is also self-contained publicly:
+
+```bash
+python tools/audit_current_drama.py
+python tools/prepare_drama_review.py
+```
+
+`prepare_drama_review.py` emits flat JSONL records containing collision-safe identity, runtime-key identity, scenario/order, speaker, source, maintained translation, and previous/next source. Use `--scenario`, `--source-equal-only`, or `--max-items` to create bounded review batches.
 
 The canonical public record schema is `qa/schemas/agent-batch-record.schema.json`.
 
@@ -129,6 +138,7 @@ After applying reviewed results, also run:
 python tools/canonicalize_exact_source_conflicts.py --check
 python tools/build_quality_backlog.py --check-current-key
 python tools/audit_current_localizetext.py
+python tools/audit_current_drama.py
 ```
 
 The first prevents reintroducing mechanically closable exact-source divergence; the second prevents new quality debt on maintained source-key surfaces.

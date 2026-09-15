@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kohakunamori/SCSPTranslationData/qa/schemas/drama-review-record.schema.json",
+  "title": "SCSP Current Drama Review Record",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "identity_sha256",
+    "runtime_key_sha256",
+    "scenario_id",
+    "line_index",
+    "source_schema",
+    "unique_id",
+    "speaker",
+    "source",
+    "translation",
+    "previous_source",
+    "next_source",
+    "source_equal"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "identity_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "runtime_key_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "scenario_id": {"type": "string", "minLength": 1},
+    "line_index": {"type": "integer", "minimum": 0},
+    "source_schema": {
+      "type": "string",
+      "enum": ["DramaSubtitlePlayableAsset", "SujigakiLinePlayableAsset"]
+    },
+    "unique_id": {"type": "string", "minLength": 1},
+    "speaker": {"type": "string"},
+    "source": {"type": "string", "minLength": 1},
+    "translation": {"type": "string", "minLength": 1},
+    "previous_source": {"type": ["string", "null"]},
+    "next_source": {"type": ["string", "null"]},
+    "source_equal": {"type": "boolean"}
+  },
+  "additionalProperties": false
+}

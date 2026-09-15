@@ -6,6 +6,7 @@ Describe the affected surface(s), table(s), scenario(s), lyrics, or QA/tooling a
 
 - [ ] Current source-key surface (`local2.json` / `lyrics.json`)
 - [ ] Bundled current `localify` snapshot (`qa/current-source/`)
+- [ ] Bundled current Drama snapshot (`qa/current-source/drama-2.17-source.json.gz`)
 - [ ] Current client dump verified
 - [ ] Historical `DumpData` reference only
 - [ ] Not source-sensitive (docs/tooling only)
@@ -29,6 +30,7 @@ Run before submitting:
 python -m unittest discover -s tools -p "test_*.py"
 python tools/qa.py
 python tools/audit_current_localizetext.py
+python tools/audit_current_drama.py
 python tools/canonicalize_exact_source_conflicts.py --check
 python tools/build_quality_backlog.py --check-current-key
 git diff --check
@@ -44,6 +46,7 @@ Report:
 - Current-key blockers:
 - Strict canonicalization candidates:
 - Current localizetext mapped / missing / actionable:
+- Current Drama mapped / missing / extra / kana:
 - Relevant backlog IDs/categories:
 
 ## Review notes

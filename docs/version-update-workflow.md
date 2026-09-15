@@ -6,13 +6,14 @@ This workflow keeps existing translations while making source changes reviewable
 
 Prefer a dump from the current supported client. Use the repository `DumpData` branch as a historical/reference source, not an assumption that it is current.
 
-For the currently supported 2.17.0 main text surface, the public authoritative source anchor is already bundled under `qa/current-source/`. See [current-source-snapshot.md](current-source-snapshot.md).
+For the currently supported 2.17.0 main text and current Drama surfaces, public authoritative source anchors are already bundled under `qa/current-source/`. See [current-source-snapshot.md](current-source-snapshot.md).
 
 Collect all relevant surfaces:
 
 - main localify tables;
 - local2 exact-source strings;
 - lyrics;
+- current Drama consumer dialogue;
 - scenario data.
 
 ## 2. Preserve stable identity
@@ -22,6 +23,7 @@ Align by the format's stable identity:
 - `localify.json`: table + key;
 - `local2.json`: source key;
 - `lyrics.json`: source lyric key;
+- `drama.json`: exact `uniqueId + source` runtime key; use the published collision-safe identity for review tooling;
 - scenario: relative path + record key.
 
 Do not infer identity from translated text.
@@ -65,6 +67,7 @@ Run:
 ```bash
 python tools/qa.py
 python tools/audit_current_localizetext.py
+python tools/audit_current_drama.py
 git diff --check
 ```
 
@@ -77,6 +80,8 @@ python tools/build_translation_memory.py
 Treat hard errors as blockers. Review warnings according to their surface and context.
 
 The current-localizetext audit is a separate hard coverage gate. It must show every current source row mapped and no current same-kana/translated-kana-residual actionable rows before the version update is considered source-complete.
+
+The current-Drama audit is also a hard gate. A new client version must independently rebuild the Drama source universe, preserve the consumer selection rule, verify runtime-key uniqueness, and classify new/deleted/source-changed dialogue rows before carrying translations forward.
 
 ## 7. Submit a bounded PR
 

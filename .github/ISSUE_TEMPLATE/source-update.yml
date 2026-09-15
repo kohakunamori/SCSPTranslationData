@@ -18,6 +18,7 @@ body:
       label: Source provenance
       options:
         - Bundled current localify snapshot
+        - Bundled current Drama snapshot
         - Current client dump verified
         - Public historical DumpData comparison
         - Other public reproducible source
@@ -32,6 +33,7 @@ body:
         - label: localify.json
         - label: local2.json
         - label: lyrics.json
+        - label: drama.json
         - label: scenario
 
   - type: textarea

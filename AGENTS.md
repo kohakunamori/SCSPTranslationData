@@ -16,6 +16,7 @@ This repository contains the public Simplified Chinese localization data for SCS
 | `scsp_localify/localify.json` | Main localization tables | Preserve table names and keys; edit user-visible values only |
 | `scsp_localify/local2.json` | Exact-source string map | Keys are source text; normally edit values only |
 | `scsp_localify/lyrics.json` | Lyric source-to-display map | Keys are source lyrics; preserve the established bilingual format |
+| `scsp_localify/drama.json` | Current SCSP 2.17 Drama consumer translation | Runtime identity is exact `uniqueId + source`; preserve identity/source metadata and edit `text` only |
 | `scsp_localify/scenario/**/*.json` | Scenario dialogue | Preserve file path, record order, `key`, and JSON shape; edit `text` only |
 | `qa/` | Public translation policy and QA knowledge | Keep rules generic, reviewable, and documented |
 | `tools/` | Public QA and maintenance tools | Must use only public repository inputs |
@@ -27,7 +28,7 @@ This repository contains the public Simplified Chinese localization data for SCS
 3. Check `qa/glossary.json`, `qa/names.json`, existing translations, and translation-memory output before inventing a new term.
 4. Make the smallest coherent change. Never reformat large JSON files just to change a few values.
 5. Do not change keys to "fix" source text. A key may be an identifier or an exact-source lookup key.
-6. For scenario dialogue, inspect nearby lines so pronouns, speaker tone, terminology, and line breaks remain coherent.
+6. For Drama/scenario dialogue, inspect nearby lines so pronouns, speaker tone, terminology, and line breaks remain coherent. For current Drama, prefer the adjacent context already published in `qa/current-source/drama-2.17-source.json.gz`.
 
 ## Required quality rules
 
@@ -73,7 +74,7 @@ Do not remove source lyric text merely to satisfy a kana-residue checker.
 
 Recommended flow:
 
-1. For `localify`, use the bundled current 2.17 snapshot under `qa/current-source/` before consulting historical `DumpData`. For other surfaces, establish current source provenance before source-sensitive edits.
+1. For `localify` and current Drama, use the bundled 2.17 source snapshots under `qa/current-source/` before consulting historical `DumpData`. For legacy scenario or other surfaces, establish current source provenance before source-sensitive edits.
 2. Reuse exact, unambiguous existing translations where context is compatible.
 3. Apply the reviewed glossary and canonical names.
 4. Translate only unresolved source text.
@@ -81,6 +82,7 @@ Recommended flow:
    ```bash
    python tools/qa.py
    python tools/audit_current_localizetext.py
+   python tools/audit_current_drama.py
    ```
 6. When a `DumpData` ref is available, build a public translation-memory view:
    ```bash
@@ -93,6 +95,10 @@ Recommended flow:
    By default, this only emits unresolved records whose source identity is available from a maintained source-key surface. If a dump has been independently verified as current, opt in explicitly:
    ```bash
    python tools/prepare_agent_batch.py --dump-ref <current-source-ref> --authoritative-dump
+   ```
+   For current Drama review, use the dedicated context-rich view:
+   ```bash
+   python tools/prepare_drama_review.py
    ```
 8. Validate structured Agent output before applying it:
    ```bash
@@ -117,6 +123,10 @@ The public interchange schemas live under `qa/schemas/`. Do not invent a private
 Do not use `--authoritative-dump` for the historical `DumpData` branch merely to increase batch size.
 
 The current localizetext snapshot is a source-coverage anchor, not a request to force source/target runtime templates into textual identity. A Japanese source can contain a concrete number or layout token while the maintained localized value intentionally uses a runtime placeholder or different wrapping. Use `audit_current_localizetext.py` for full current-version coverage/kana closure and keep `qa.py` for its documented review semantics.
+
+For current Drama, the plugin lookup key is exact `uniqueId + source`. Do not rewrite `uniqueId` or source text to make a translation easier to match. Eight current scenarios contain duplicate bare unique IDs, so Agent tooling should use the published collision-safe identity and runtime-key identity rather than assuming `uniqueId` alone is globally unique.
+
+The current Drama snapshot is not the same surface as legacy `scsp_localify/scenario/**/*.json`; do not transfer provenance assumptions between them.
 
 Historical `prepare_agent_batch.py` skip counts are not current localify defect counts. Current localify completeness is defined by the current-source audit.
 

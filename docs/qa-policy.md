@@ -32,6 +32,16 @@ python tools/audit_current_localizetext.py
 
 This gate requires every current source table/key to map to a maintained translation and rejects current same-kana or translated-kana-residual rows. The accepted checkpoint is **138,036 / 138,036 mapped / 0 missing / 0 actionable**.
 
+Current Drama has an independent authoritative snapshot and gate:
+
+```bash
+python tools/audit_current_drama.py
+```
+
+The Drama gate verifies deterministic source-snapshot hashes, 267/267 scenario resolution, collision-safe identities, exact runtime `uniqueId + source` key uniqueness, source/translation metadata alignment, full **11,402 / 11,402** translation coverage, and **0 target-kana / 0 empty translation** rows.
+
+Bare Drama `uniqueId` values are not globally safe identities: eight current scenarios contain duplicate unique IDs. The accepted runtime key remains unique because it includes exact source text.
+
 It intentionally does **not** require source and target placeholder, rich-text, numeric, newline, or NBSP signatures to be identical. Current Japanese `localizetext` may contain concrete/static values while the maintained localization uses runtime templates or different display wrapping. Applying the generic signature rules to the entire current source universe would create false blockers.
 
 If a contributor has verified that a dump/ref is current and authoritative, run:
@@ -141,10 +151,11 @@ CI publishes:
 - a JSON QA report artifact;
 - a Markdown job summary.
 - a current-localizetext coverage audit JSON/Markdown artifact;
+- a current-Drama coverage/identity audit JSON/Markdown artifact;
 - a generated quality-backlog JSONL and JSON/Markdown summary artifact.
 - an exact-source canonicalization proposal artifact.
 
-Warnings remain visible for community cleanup without globally blocking historical debt. Hard errors, current-localizetext missing/actionable rows, strict canonicalization candidates, and non-exempt current-key backlog items fail the job.
+Warnings remain visible for community cleanup without globally blocking historical debt. Hard errors, current-localizetext missing/actionable rows, current-Drama identity/coverage/kana failures, strict canonicalization candidates, and non-exempt current-key backlog items fail the job.
 
 ## Improving the QA system
 

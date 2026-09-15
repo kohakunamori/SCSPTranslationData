@@ -35,7 +35,7 @@ Consult `qa/glossary.json`. For recurring systems, mechanics, currencies, and me
 
 A glossary match is context guidance, not automatic global search-and-replace.
 
-## Scenario dialogue
+## Drama and scenario dialogue
 
 Translate the speaker's intent and tone rather than mirroring Japanese word order.
 
@@ -49,6 +49,10 @@ Before translating a line, inspect nearby dialogue when possible. Pay attention 
 - line-break layout.
 
 A source trailing newline can be serialization noise on some older scenario data. Do not add awkward visible whitespace only to satisfy a mechanical check; the public QA tool treats scenario layout differences as review signals rather than universal hard failures.
+
+For current SCSP 2.17 Drama, use `scsp_localify/drama.json` together with the current source/context snapshot under `qa/current-source/`. The runtime identity is exact `uniqueId + source`; do not change either field. Bare `uniqueId` is not a sufficient global identity because current data contains duplicate unique IDs in several scenarios.
+
+Use `python tools/prepare_drama_review.py` when an Agent or reviewer needs a flat record with scenario/order, speaker, source, maintained translation, and previous/next source context.
 
 ## Lyrics
 
@@ -95,7 +99,7 @@ Japanese prose left equal to source should normally be reviewed.
 Agents should receive:
 
 - source text;
-- stable identity (surface/table/key or scenario path/key);
+- stable identity (surface/table/key, Drama collision-safe/runtime-key identity, or legacy scenario path/key);
 - nearby context when available;
 - relevant glossary/name entries;
 - existing exact-source translations and conflicts;
