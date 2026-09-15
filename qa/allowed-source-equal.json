@@ -7,7 +7,10 @@
   ],
   "by_surface": {
     "localify": [],
-    "local2": [],
+    "local2": [
+      "アイウエオ",
+      "アイウエオカキクケコサシスセソ\nアイウエオ\nアイウエオ"
+    ],
     "lyrics": [],
     "scenario": []
   }

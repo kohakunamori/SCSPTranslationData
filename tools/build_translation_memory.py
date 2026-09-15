@@ -11,6 +11,7 @@ from qa_common import (
     QA,
     ROOT,
     aligned_records,
+    canonical_same_form,
     has_han,
     has_kana,
     load_policy,
@@ -25,11 +26,18 @@ def stable_id(surface: str, identity: str, source: str) -> str:
     return hashlib.sha256(raw).hexdigest()[:24]
 
 
-def source_equal_allowed(source: str, surface: str, allowed: dict[str, Any]) -> bool:
+def source_equal_allowed(
+    source: str,
+    surface: str,
+    allowed: dict[str, Any],
+    names: dict[str, Any],
+) -> bool:
     if source in set(allowed.get("global", [])):
         return True
     by_surface = allowed.get("by_surface", {})
-    return isinstance(by_surface, dict) and source in set(by_surface.get(surface, []))
+    if isinstance(by_surface, dict) and source in set(by_surface.get(surface, [])):
+        return True
+    return canonical_same_form(source, names)
 
 
 def main() -> int:
@@ -45,7 +53,7 @@ def main() -> int:
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
 
-    _, _, _, allowed = load_policy()
+    _, _, names, allowed = load_policy()
     records = list(aligned_records(dump_ref))
     rows: list[dict[str, Any]] = []
 
@@ -57,7 +65,7 @@ def main() -> int:
 
         if target != source:
             status = "translated"
-        elif source_equal_allowed(source, surface, allowed):
+        elif source_equal_allowed(source, surface, allowed, names):
             status = "reviewed-same-form"
         elif has_kana(source) or has_han(source):
             status = "needs-review"

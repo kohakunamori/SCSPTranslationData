@@ -49,6 +49,20 @@ Current categories include:
 
 A warning can indicate a real translation problem, a context-sensitive translation, a name/brand, a lyric convention, or harmless serialization/layout drift.
 
+Exact-source conflicts are split by semantics: if maintained outputs differ only by ordinary spaces, NBSP, or full-width spaces, QA reports `duplicate-source-layout-variant` and the backlog treats it as P3 layout debt instead of a P2 semantic conflict. Canonical names whose reviewed source and translation are the same are also accepted as same-form automatically.
+
+Backlog entries with historical `DumpData` provenance carry `requires_source_verification=true`. This is especially important for protected-format and numeric findings: a P1/P2 priority indicates review value, not permission to repair against a stale source snapshot.
+
+Warnings are converted into stable, deduplicated community review tasks with:
+
+```bash
+python tools/build_quality_backlog.py
+```
+
+See [community-quality-backlog.md](community-quality-backlog.md). The backlog distinguishes P1/P2/P3 and intentionally collapses repeated manifestations of the same structural debt where appropriate.
+
+False positives should be reduced through the narrowest reviewed policy. For example, kana-bearing song titles that intentionally remain Japanese belong in `kana_preserve_terms`; broad kana ignores are not acceptable.
+
 ## Baseline exceptions
 
 `qa/baseline-exceptions.json` records anomalies that existed before the public QA gate was introduced.
@@ -102,6 +116,7 @@ CI publishes:
 
 - a JSON QA report artifact;
 - a Markdown job summary.
+- a generated quality-backlog JSONL and JSON/Markdown summary artifact.
 
 Warnings remain visible for community cleanup without blocking unrelated contributions; hard errors fail the job.
 

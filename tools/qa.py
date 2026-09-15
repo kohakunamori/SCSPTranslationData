@@ -14,9 +14,12 @@ from qa_common import (
     QA,
     ROOT,
     aligned_records,
+    canonical_same_form,
+    compact_display_spacing,
     format_signature,
     has_han,
     has_kana,
+    has_unpreserved_kana,
     load_json,
     load_policy,
     lyric_translation_only,
@@ -159,11 +162,18 @@ def check_public_privacy(findings: Findings, rules: dict[str, Any]) -> None:
                 findings.add("error", "privacy-" + name, f"{rel}: {excerpt!r}")
 
 
-def allowed_source_equal(source: str, surface: str, allowed: dict[str, Any]) -> bool:
+def allowed_source_equal(
+    source: str,
+    surface: str,
+    allowed: dict[str, Any],
+    names: dict[str, Any],
+) -> bool:
     if source in set(allowed.get("global", [])):
         return True
     by_surface = allowed.get("by_surface", {})
-    return isinstance(by_surface, dict) and source in set(by_surface.get(surface, []))
+    if isinstance(by_surface, dict) and source in set(by_surface.get(surface, [])):
+        return True
+    return canonical_same_form(source, names)
 
 
 def effective_severity(
@@ -227,9 +237,11 @@ def check_format(
         if src_sig[component] != dst_sig[component]:
             requested = "error" if component in hard_components else "warning"
             severity = effective_severity(requested, record, authoritative_dump)
-            if severity == "error" and known_format_exception(baseline, surface, ident, component):
+            is_known_exception = known_format_exception(baseline, surface, ident, component)
+            if severity == "error" and is_known_exception:
                 severity = "warning"
-            findings.add(severity, f"format-{component}", f"{surface}:{ident}")
+            code = f"format-{component}-known" if is_known_exception else f"format-{component}"
+            findings.add(severity, code, f"{surface}:{ident}")
 
     for component, policy_key in (("lf", "newline"), ("cr", "newline"), ("nbsp", "nbsp")):
         if src_sig[component] == dst_sig[component]:
@@ -275,6 +287,10 @@ def check_semantics(
 ) -> None:
     terms = [x for x in glossary.get("terms", []) if isinstance(x, dict)]
     preserve_terms = [x for x in glossary.get("preserve_terms", []) if isinstance(x, str)]
+    kana_preserve_terms = [
+        *preserve_terms,
+        *[x for x in glossary.get("kana_preserve_terms", []) if isinstance(x, str)],
+    ]
 
     name_map = {
         row["source"]: row["translation"]
@@ -292,10 +308,14 @@ def check_semantics(
         ident = record["identity"]
         semantic_target = lyric_translation_only(source, target) if surface == "lyrics" else target
 
-        if target == source and (has_kana(source) or has_han(source)) and not allowed_source_equal(source, surface, allowed):
+        if target == source and (has_kana(source) or has_han(source)) and not allowed_source_equal(source, surface, allowed, names):
             findings.add("warning", "source-equal", f"{surface}:{ident}")
 
-        if semantic_target and has_kana(semantic_target):
+        if (
+            semantic_target
+            and not (target == source and allowed_source_equal(source, surface, allowed, names))
+            and has_unpreserved_kana(semantic_target, kana_preserve_terms)
+        ):
             findings.add("warning", "target-has-kana", f"{surface}:{ident}: {semantic_target[:100]!r}")
 
         for term in terms:
@@ -332,10 +352,12 @@ def check_semantics(
     for source, targets in by_source.items():
         if len(targets) <= 1 or len(source.strip()) <= 3:
             continue
+        compact_targets = {compact_display_spacing(target) for target in targets}
         sample = sorted(targets)[:4]
+        code = "duplicate-source-layout-variant" if len(compact_targets) == 1 else "duplicate-source-conflict"
         findings.add(
             "warning",
-            "duplicate-source-conflict",
+            code,
             f"{source[:80]!r}: {len(targets)} translations; locations={by_source_ids[source][:4]!r}; sample={sample!r}",
         )
 

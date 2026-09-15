@@ -46,7 +46,10 @@
 - [翻译风格指南](docs/translation-style-guide.md)；
 - [Agent 翻译指南](docs/agent-translation-guide.md)；
 - [翻译 QA 策略](docs/qa-policy.md)；
+- [社区质量 Backlog](docs/community-quality-backlog.md)；
 - [客户端版本更新流程](docs/version-update-workflow.md)。
+
+GitHub 侧也提供了翻译质量 / source update Issue 表单与 Pull Request 模板。提交者需要明确 source provenance、QA/backlog 前后变化以及公开仓库隐私检查，方便社区 review 和 Agent 协作。
 
 公开 QA/知识数据：
 
@@ -55,9 +58,11 @@
 - `qa/allowed-source-equal.json`：经审核可以保持原样的文本；
 - `qa/rules.json`：结构、格式、隐私与各文本表面的 QA 策略；
 - `qa/baseline-exceptions.json`：公开记录引入 QA 前已经存在的窄范围历史例外，新问题不会因此被放过；
+- `qa/backlog-policy.json`：将 QA warning 映射为 P1/P2/P3 社区 review 任务；
 - `qa/schemas/`：Agent batch/result 的公开 JSON Schema；
 - `tools/qa.py`：统一质量检查入口；
 - `tools/build_translation_memory.py`：从公开的 `TransData` 与 `DumpData` 对齐生成 Translation Memory。
+- `tools/build_quality_backlog.py`：把 repository-wide warning 去重并整理成稳定、可筛选的社区质量任务；
 - `tools/prepare_agent_batch.py`：把未解决 source 去重后整理成模型无关的 Agent batch；
 - `tools/validate_agent_result.py`：在应用 Agent 输出前验证 source identity、覆盖率和格式签名。
 
@@ -79,6 +84,34 @@ QA 将结果区分为：
 ```bash
 python tools/qa.py --dump-ref <current-source-ref> --authoritative-dump
 ```
+
+### 生成社区质量 Backlog
+
+```bash
+python tools/build_quality_backlog.py
+```
+
+默认输出到 `qa/generated/`，包括完整 JSONL task 列表和 JSON/Markdown summary。Backlog 会把 warning 去重并按 P1/P2/P3、术语、格式、数字、布局、一致性等维度分类。
+
+例如只查看 P1：
+
+```bash
+python tools/build_quality_backlog.py --priority P1
+```
+
+或只准备适合 Agent review 的术语任务：
+
+```bash
+python tools/build_quality_backlog.py \
+  --priority P2 \
+  --category terminology \
+  --agent-ready-only \
+  --max-items 50
+```
+
+所有 backlog item 都明确带有 `auto_apply_allowed=false`。它们是 review 任务，不是自动修改指令。详见 [社区质量 Backlog](docs/community-quality-backlog.md)。
+
+对于依赖历史 `DumpData` 的任务，backlog 还会标记 `source_authority=historical-reference` 与 `requires_source_verification=true`，提醒 Agent/贡献者先确认当前权威原文，再修复占位符、数字或源文敏感问题。
 
 ### 生成 Translation Memory
 

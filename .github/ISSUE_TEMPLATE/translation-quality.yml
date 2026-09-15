@@ -1,0 +1,69 @@
+name: Translation quality
+description: Report a mistranslation, untranslated text, terminology inconsistency, or localization display issue.
+title: "[Translation] "
+labels:
+  - translation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please provide only public localization context. Do not include account data, tokens, private endpoints, personal paths, or unrelated game files/logs.
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options:
+        - localify.json
+        - local2.json
+        - lyrics.json
+        - scenario
+        - glossary / names
+        - QA / tooling
+        - Unknown
+    validations:
+      required: true
+
+  - type: input
+    id: identity
+    attributes:
+      label: Stable identity
+      description: Table/key, exact source key, scenario path/key, or backlog ID if known.
+      placeholder: "mlExample_Table:123 / scenario/...:SCENARIO_... / backlog id"
+
+  - type: textarea
+    id: source
+    attributes:
+      label: Japanese source
+      description: Exact source text when publicly available.
+      render: text
+
+  - type: textarea
+    id: current
+    attributes:
+      label: Current translation
+      render: text
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed translation / issue
+      description: Explain the problem and, if possible, provide a proposed correction.
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Nearby dialogue, UI meaning, screenshot description, source provenance, or terminology reasoning. Do not include sensitive/private material.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I checked the current glossary/name policy where relevant.
+          required: true
+        - label: I did not include private/account-sensitive information.
+          required: true

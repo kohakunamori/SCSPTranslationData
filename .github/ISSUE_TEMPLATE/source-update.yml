@@ -1,0 +1,56 @@
+name: Source/version update
+description: Track new/changed public source text after a client update or verified dump.
+title: "[Source update] "
+labels:
+  - source-update
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Client/source version
+      placeholder: "e.g. SCSP 2.x / dump date / public source ref"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: provenance
+    attributes:
+      label: Source provenance
+      options:
+        - Current client dump verified
+        - Public historical DumpData comparison
+        - Other public reproducible source
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: surfaces
+    attributes:
+      label: Affected surfaces
+      options:
+        - label: localify.json
+        - label: local2.json
+        - label: lyrics.json
+        - label: scenario
+
+  - type: textarea
+    id: changes
+    attributes:
+      label: Change summary
+      description: New keys, changed source text, deleted keys, or source-identical carry-forward observations.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Public reproduction / verification
+      description: Explain how another contributor can verify the source update without private infrastructure.
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Public-repository privacy
+      options:
+        - label: This issue contains no credentials, account data, private endpoints, private paths, or unrelated game files/logs.
+          required: true

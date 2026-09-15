@@ -31,7 +31,7 @@ This repository contains the public Simplified Chinese localization data for SCS
 
 ## Required quality rules
 
-Read `docs/qa-policy.md` when changing validators, exceptions, or QA policy.
+Read `docs/qa-policy.md` and `docs/community-quality-backlog.md` when changing validators, exceptions, backlog classification, or QA policy.
 
 Hard failures are structural or runtime-safety problems and must be fixed before submission:
 
@@ -51,7 +51,17 @@ Review warnings are semantic signals and require judgement rather than blind rep
 
 Do not silence a warning by making a worse translation. If the existing form is intentional, document or whitelist it through the public QA policy.
 
+Exact-source translations that differ only by ordinary/NBSP/full-width display spacing are layout variants, not automatic terminology conflicts. Canonical same-form names in `qa/names.json` do not need duplicate entries in `qa/allowed-source-equal.json`.
+
 `qa/baseline-exceptions.json` is only for anomalies that predate the public QA gate. Do not add new entries merely to make CI pass; fix new defects instead.
+
+For repository-wide cleanup, generate the structured backlog:
+
+```bash
+python tools/build_quality_backlog.py
+```
+
+Prefer bounded P1/P2/category batches. Never treat `agent_ready=true` as permission to auto-apply; every generated item has `auto_apply_allowed=false`.
 
 ## Lyrics policy
 
@@ -84,7 +94,8 @@ Recommended flow:
    python tools/validate_agent_result.py qa/generated/agent-batch.jsonl path/to/result.jsonl
    ```
 9. Review every hard failure and relevant warning.
-10. Inspect `git diff --check` and the semantic diff before committing.
+10. For quality-debt work, regenerate the backlog and confirm the intended backlog ID disappears or is narrowly reclassified.
+11. Inspect `git diff --check` and the semantic diff before committing.
 
 Agent output is judged by the same QA gates as human output. Do not merge raw model output without validation.
 
@@ -108,7 +119,7 @@ Read `docs/version-update-workflow.md`. Existing `update_local_json.py` performs
 
 - Keep translation PRs scoped by surface, story set, table, or version update when practical.
 - Explain whether the change is human-authored, agent-assisted, or mechanically migrated when that matters to review.
-- Include the QA result in the PR description for bulk changes.
+- Include the QA result and before/after backlog counts in the PR description for bulk quality-cleanup changes.
 - Generated local QA reports and translation-memory output are working artifacts unless a maintainer explicitly chooses to version them.
 
 ## Privacy check

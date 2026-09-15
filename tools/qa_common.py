@@ -17,7 +17,7 @@ QA = ROOT / "qa"
 BRACE_RE = re.compile(r"\{[^{}]+\}")
 PRINTF_RE = re.compile(r"%(?:\d+\$)?[-+#0 .'\d]*(?:\.\d+)?[A-Za-z%]")
 TAG_RE = re.compile(r"<[^>]+>")
-KANA_RE = re.compile(r"[\u3040-\u30ff]")
+KANA_RE = re.compile(r"[\u3041-\u3096\u309d-\u309f\u30a1-\u30fa\u30fd-\u30ff]")
 HAN_RE = re.compile(r"[\u3400-\u9fff]")
 DIGIT_RE = re.compile(r"\d+(?:\.\d+)?")
 PERCENT_RE = re.compile(r"(?<![A-Za-z])\d+(?:\.\d+)?\s*[%％]")
@@ -86,8 +86,42 @@ def has_kana(text: str) -> bool:
     return bool(KANA_RE.search(text))
 
 
+def has_unpreserved_kana(text: str, preserve_terms: Iterable[str]) -> bool:
+    remaining = text
+    for term in preserve_terms:
+        if term:
+            variants = {
+                term,
+                term.replace(" ", "\u00a0"),
+                term.replace("\u00a0", " "),
+            }
+            for variant in variants:
+                remaining = remaining.replace(variant, "")
+    return has_kana(remaining)
+
+
 def has_han(text: str) -> bool:
     return bool(HAN_RE.search(text))
+
+
+def compact_display_spacing(text: str) -> str:
+    return text.replace(" ", "").replace("\u00a0", "").replace("\u3000", "")
+
+
+def canonical_same_form(source: str, names: dict[str, Any]) -> bool:
+    compact_source = compact_display_spacing(source)
+    for row in names.get("names", []):
+        if not isinstance(row, dict):
+            continue
+        name_source = row.get("source")
+        translation = row.get("translation")
+        if not isinstance(name_source, str) or not isinstance(translation, str):
+            continue
+        if compact_display_spacing(name_source) != compact_source:
+            continue
+        if compact_display_spacing(translation) == compact_source:
+            return True
+    return False
 
 
 def format_signature(text: str) -> dict[str, Any]:

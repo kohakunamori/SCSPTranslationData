@@ -27,6 +27,23 @@ class QaCommonTests(unittest.TestCase):
     def test_percentage_signature_normalizes_percent_forms(self) -> None:
         self.assertEqual(percentage_signature("30％ / 25%"), Counter({"30%": 1, "25%": 1}))
 
+    def test_kana_detection_ignores_japanese_middle_dot(self) -> None:
+        from qa_common import (
+            canonical_same_form,
+            compact_display_spacing,
+            has_kana,
+            has_unpreserved_kana,
+        )
+        self.assertFalse(has_kana("Chill Out・Nokuchiruka"))
+        self.assertTrue(has_kana("アイドル"))
+        self.assertFalse(has_unpreserved_kana("游玩「ツバサグラビティ」吧", ["ツバサグラビティ"]))
+        self.assertFalse(has_unpreserved_kana("《明日もBeautiful\u00a0Day》", ["明日もBeautiful Day"]))
+        self.assertTrue(has_unpreserved_kana("游玩「ツバサグラビティ」して", ["ツバサグラビティ"]))
+        self.assertEqual(compact_display_spacing("七草\u00a0日花"), "七草日花")
+        names = {"names": [{"source": "大崎 甘奈", "translation": "大崎 甘奈"}]}
+        self.assertTrue(canonical_same_form("大崎甘奈", names))
+        self.assertFalse(canonical_same_form("大崎 甜花", names))
+
     def test_lyric_translation_only_strips_preserved_source_prefix(self) -> None:
         source = "星の声"
         self.assertEqual(lyric_translation_only(source, "星の声\n星之声"), "星之声")

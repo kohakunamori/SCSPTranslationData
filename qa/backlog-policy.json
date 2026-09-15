@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "description": "Public prioritization policy for translation QA warnings. Priorities express review urgency, not automatic permission to edit.",
+  "priorities": {
+    "P1": {
+      "meaning": "High-value review: likely untranslated text, residual Japanese, or protected runtime-format risk.",
+      "default_agent_mode": "review"
+    },
+    "P2": {
+      "meaning": "Semantic consistency review: terminology, duplicate-source conflicts, or numeric meaning.",
+      "default_agent_mode": "review"
+    },
+    "P3": {
+      "meaning": "Low-risk/layout or grandfathered structural debt that should be improved cautiously.",
+      "default_agent_mode": "manual_review"
+    }
+  },
+  "categories": {
+    "protected-format": {
+      "priority": "P1",
+      "agent_ready": true,
+      "recommended_action": "Compare source and translation tokens/tags, verify the current authoritative source, then repair only the broken protected syntax."
+    },
+    "residual-japanese": {
+      "priority": "P1",
+      "agent_ready": true,
+      "recommended_action": "Review whether remaining kana is intentional. Translate genuine residue while preserving names, brands, control syntax, and lyric source prefixes."
+    },
+    "untranslated-or-intentional": {
+      "priority": "P2",
+      "agent_ready": true,
+      "recommended_action": "Classify source-equal text as intentional same-form, name/control text, or genuine untranslated content; translate only the latter."
+    },
+    "terminology": {
+      "priority": "P2",
+      "agent_ready": true,
+      "recommended_action": "Review glossary applicability in context. Prefer project terminology unless the Japanese term has a context-specific meaning."
+    },
+    "source-consistency": {
+      "priority": "P2",
+      "agent_ready": true,
+      "recommended_action": "Compare all occurrences of the same Japanese source and decide whether different Chinese outputs are contextual or inconsistent."
+    },
+    "display-spacing-variant": {
+      "priority": "P3",
+      "agent_ready": false,
+      "recommended_action": "Translations differ only by ordinary/NBSP/full-width spacing. Preserve context-specific display layout unless UI evidence shows a defect."
+    },
+    "numeric-semantics": {
+      "priority": "P2",
+      "agent_ready": true,
+      "recommended_action": "Verify numbers/percentages against the current authoritative source before changing the translation. Historical DumpData differences may be stale."
+    },
+    "layout": {
+      "priority": "P3",
+      "agent_ready": false,
+      "recommended_action": "Review line breaks, CR/LF, and NBSP only with UI/rendering context. Do not normalize layout mechanically."
+    },
+    "baseline-structure": {
+      "priority": "P3",
+      "agent_ready": false,
+      "recommended_action": "Verify the original scenario structure before removing a grandfathered duplicate key. Remove the baseline exception when fixed."
+    },
+    "baseline-format": {
+      "priority": "P3",
+      "agent_ready": false,
+      "recommended_action": "This protected-format difference predates the public QA gate. Verify the fixture/source semantics before changing it, and remove the baseline exception when fixed."
+    }
+  }
+}

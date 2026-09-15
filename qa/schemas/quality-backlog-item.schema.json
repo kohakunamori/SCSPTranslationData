@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kohakunamori/SCSPTranslationData/qa/schemas/quality-backlog-item.schema.json",
+  "title": "SCSP Translation Quality Backlog Item",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "backlog_id",
+    "priority",
+    "category",
+    "code",
+    "surface",
+    "identity",
+    "agent_ready",
+    "recommended_action",
+    "auto_apply_allowed"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "backlog_id": {"type": "string", "pattern": "^[0-9a-f]{24}$"},
+    "priority": {"type": "string", "enum": ["P1", "P2", "P3"]},
+    "category": {"type": "string"},
+    "code": {"type": "string"},
+    "surface": {"type": "string"},
+    "identity": {"type": "string"},
+    "agent_ready": {"type": "boolean"},
+    "recommended_action": {"type": "string"},
+    "auto_apply_allowed": {"const": false},
+    "source": {"type": "string"},
+    "translation": {"type": "string"},
+    "provenance": {"type": "string"},
+    "source_authority": {
+      "type": "string",
+      "enum": ["current-key", "historical-reference", "unknown"]
+    },
+    "requires_source_verification": {"type": "boolean"},
+    "detail": {"type": "string"},
+    "locations": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "metadata": {"type": "object"}
+  },
+  "additionalProperties": false
+}

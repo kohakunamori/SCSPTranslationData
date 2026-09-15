@@ -32,7 +32,14 @@ jobs:
 
       - name: Run translation QA
         run: |
-          python tools/qa.py             --report qa-report.json             --markdown-report qa-report.md
+          python tools/qa.py \
+            --report qa-report.json \
+            --markdown-report qa-report.md
+
+      - name: Build community quality backlog
+        if: always()
+        run: |
+          python tools/build_quality_backlog.py
 
       - name: Publish job summary
         if: always()
@@ -40,6 +47,10 @@ jobs:
         run: |
           if [ -f qa-report.md ]; then
             cat qa-report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -f qa/generated/quality-backlog-summary.md ]; then
+            printf "\n---\n\n" >> "$GITHUB_STEP_SUMMARY"
+            cat qa/generated/quality-backlog-summary.md >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Upload QA report
@@ -50,4 +61,7 @@ jobs:
           path: |
             qa-report.json
             qa-report.md
+            qa/generated/quality-backlog.jsonl
+            qa/generated/quality-backlog-summary.json
+            qa/generated/quality-backlog-summary.md
           if-no-files-found: ignore

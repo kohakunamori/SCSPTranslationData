@@ -10,6 +10,7 @@ from typing import Any
 from qa_common import (
     format_signature,
     has_kana,
+    has_unpreserved_kana,
     numeric_signature,
     percentage_signature,
 )
@@ -111,7 +112,8 @@ def validate(batch_path: Path, result_path: Path) -> dict[str, Any]:
                 findings.warning(f"{sid}: numeric signature changed")
             if percentage_signature(source) != percentage_signature(target):
                 findings.warning(f"{sid}: percentage signature changed")
-            if has_kana(target):
+            preserve_terms = [x for x in source_row.get("preserve_terms", []) if isinstance(x, str)]
+            if has_unpreserved_kana(target, preserve_terms):
                 findings.warning(f"{sid}: translation still contains kana")
 
         elif decision == "keep_source":

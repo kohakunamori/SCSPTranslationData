@@ -147,6 +147,22 @@ For large batches, review risk rather than random rows only. Prioritize:
 
 A second agent can review the first agent's output, but it should receive the original Japanese and the same stable identity rather than only the proposed Chinese translation.
 
+## Quality-backlog review
+
+Translation generation and quality-debt review are separate workflows. For existing repository warnings, use:
+
+```bash
+python tools/build_quality_backlog.py --agent-ready-only
+```
+
+To focus on the highest-priority review slice:
+
+```bash
+python tools/build_quality_backlog.py --priority P1 --agent-ready-only
+```
+
+Each backlog record includes source identity/provenance, category, priority, and a recommended review action. `agent_ready` means an Agent can assist with review; it does **not** mean the proposed change may be applied automatically. `auto_apply_allowed` is always false.
+
 ## Reproducibility
 
 Record enough public information to reproduce a batch:

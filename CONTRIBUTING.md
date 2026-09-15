@@ -20,7 +20,7 @@ Use this path for typos, terminology fixes, individual UI strings, lyrics correc
 
 Read `AGENTS.md` and `docs/agent-translation-guide.md` first.
 
-For validator behavior, warning policy, and historical baseline exceptions, also read `docs/qa-policy.md`.
+For validator behavior, warning policy, historical baseline exceptions, and repository-wide cleanup, also read `docs/qa-policy.md` and `docs/community-quality-backlog.md`.
 
 Bulk work should:
 
@@ -71,6 +71,14 @@ python tools/build_translation_memory.py
 
 Generated output goes under `qa/generated/` and is not committed by default.
 
+For an actionable, deduplicated quality-debt view:
+
+```bash
+python tools/build_quality_backlog.py
+```
+
+When a PR is specifically fixing quality debt, include the affected backlog IDs or category/priority slice and the before/after backlog counts.
+
 ## Terminology
 
 Reviewed shared terminology lives in `qa/glossary.json`; canonical person-name mappings live in `qa/names.json`.
@@ -87,6 +95,8 @@ For non-trivial changes, include:
 - QA summary;
 - known warnings or intentional exceptions;
 - screenshots only when they are useful and contain no private/account information.
+
+The repository's GitHub Pull Request template asks for the same information, including source provenance and before/after QA/backlog counts. Translation-quality and source/version-update Issue forms are also available under `.github/ISSUE_TEMPLATE/`.
 
 ## Public-repository privacy
 

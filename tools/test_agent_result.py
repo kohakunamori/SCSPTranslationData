@@ -71,6 +71,34 @@ class AgentResultValidationTests(unittest.TestCase):
         self.assertEqual(report["status"], "FAIL")
         self.assertTrue(any("brace signature changed" in x for x in report["errors"]))
 
+    def test_preserved_song_title_does_not_raise_kana_warning(self) -> None:
+        batch = [{
+            "schema_version": 1,
+            "source_id": "0123456789abcdef01234567",
+            "source": "ツバサグラビティをプレイ",
+            "classification": "needs_translation",
+            "occurrences": [{"surface": "localify", "identity": "table:1", "provenance": "current-source-key"}],
+            "existing_translations": [],
+            "relevant_terms": [],
+            "relevant_names": [],
+            "preserve_terms": ["ツバサグラビティ"],
+        }]
+        result = [{
+            "schema_version": 1,
+            "source_id": "0123456789abcdef01234567",
+            "source": "ツバサグラビティをプレイ",
+            "decision": "translate",
+            "translation": "游玩ツバサグラビティ",
+        }]
+        with tempfile.TemporaryDirectory() as tmp:
+            bp = Path(tmp) / "batch.jsonl"
+            rp = Path(tmp) / "result.jsonl"
+            write_jsonl(bp, batch)
+            write_jsonl(rp, result)
+            report = validate(bp, rp)
+        self.assertEqual(report["status"], "PASS")
+        self.assertFalse(any("kana" in x for x in report["warnings"]))
+
 
 if __name__ == "__main__":
     unittest.main()

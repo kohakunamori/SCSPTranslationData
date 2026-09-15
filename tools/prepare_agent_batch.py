@@ -10,6 +10,7 @@ from typing import Any
 from qa_common import (
     QA,
     aligned_records,
+    canonical_same_form,
     has_han,
     has_kana,
     load_policy,
@@ -23,11 +24,18 @@ def source_id(source: str) -> str:
     return hashlib.sha256(source.encode("utf-8")).hexdigest()[:24]
 
 
-def is_allowed_same_form(source: str, surface: str, allowed: dict[str, Any]) -> bool:
+def is_allowed_same_form(
+    source: str,
+    surface: str,
+    allowed: dict[str, Any],
+    names: dict[str, Any],
+) -> bool:
     if source in set(allowed.get("global", [])):
         return True
     by_surface = allowed.get("by_surface", {})
-    return isinstance(by_surface, dict) and source in set(by_surface.get(surface, []))
+    if isinstance(by_surface, dict) and source in set(by_surface.get(surface, [])):
+        return True
+    return canonical_same_form(source, names)
 
 
 def semantic_target(surface: str, source: str, target: str) -> str:
@@ -127,7 +135,7 @@ def main() -> int:
             target = rec["translation"]
             target_only = semantic_target(rec["surface"], source, target)
             if target == source:
-                if not is_allowed_same_form(source, rec["surface"], allowed):
+                if not is_allowed_same_form(source, rec["surface"], allowed, names):
                     unresolved.append(rec)
                 else:
                     skipped_allowed += 1
@@ -163,10 +171,14 @@ def main() -> int:
             })
         occurrence_rows.sort(key=lambda x: (x["surface"], x["identity"]))
         occurrence_surfaces = {x["surface"] for x in occurrence_rows}
+        preserve_candidates = [
+            *[x for x in glossary.get("preserve_terms", []) if isinstance(x, str)],
+            *[x for x in glossary.get("kana_preserve_terms", []) if isinstance(x, str)],
+        ]
         preserve = [
             term
-            for term in glossary.get("preserve_terms", [])
-            if isinstance(term, str) and term in source
+            for term in preserve_candidates
+            if term in source
         ]
 
         batch.append({
