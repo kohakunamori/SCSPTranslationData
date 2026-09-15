@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "description": "Reviewed exact source-equal strings that should not be reported as untranslated by default.",
+  "global": [
+    "Motion",
+    "THE IDOLM@STER"
+  ],
+  "by_surface": {
+    "localify": [],
+    "local2": [],
+    "lyrics": [],
+    "scenario": []
+  }
+}

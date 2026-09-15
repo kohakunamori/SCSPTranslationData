@@ -35,6 +35,81 @@
 
 当前 2.17 数据已经覆盖主文本、local2、歌词和大规模 scenario 数据。覆盖范围不等于每一行都需要被翻译：专有名词、占位符、资源键、程序标记以及本身就应保持原样的内容可能有意保留。
 
+## 面向 Agent 与社区协作
+
+本仓库现在提供一套公开、模型无关的翻译质量层，目标是让人工译者和不同 Agent 都能在同一套规则下协作，而不是依赖某个维护者的私有工作环境。
+
+入口文档：
+
+- [AGENTS.md](AGENTS.md)：Agent 在本仓库工作的首要说明，包含数据边界、修改规则、质量门和推荐流程；
+- [CONTRIBUTING.md](CONTRIBUTING.md)：人工、小规模修订、批量 Agent 翻译和版本更新的贡献流程；
+- [翻译风格指南](docs/translation-style-guide.md)；
+- [Agent 翻译指南](docs/agent-translation-guide.md)；
+- [翻译 QA 策略](docs/qa-policy.md)；
+- [客户端版本更新流程](docs/version-update-workflow.md)。
+
+公开 QA/知识数据：
+
+- `qa/glossary.json`：已审核的共享术语；
+- `qa/names.json`：当前仓库沿用的人名映射；
+- `qa/allowed-source-equal.json`：经审核可以保持原样的文本；
+- `qa/rules.json`：结构、格式、隐私与各文本表面的 QA 策略；
+- `qa/baseline-exceptions.json`：公开记录引入 QA 前已经存在的窄范围历史例外，新问题不会因此被放过；
+- `qa/schemas/`：Agent batch/result 的公开 JSON Schema；
+- `tools/qa.py`：统一质量检查入口；
+- `tools/build_translation_memory.py`：从公开的 `TransData` 与 `DumpData` 对齐生成 Translation Memory。
+- `tools/prepare_agent_batch.py`：把未解决 source 去重后整理成模型无关的 Agent batch；
+- `tools/validate_agent_result.py`：在应用 Agent 输出前验证 source identity、覆盖率和格式签名。
+
+这些文件都应保持可公开复现，不依赖私人路径、账号、私有服务端或内部调试环境。
+
+### 运行 QA
+
+```bash
+python tools/qa.py
+```
+
+QA 将结果区分为：
+
+- **hard error**：JSON/结构错误、明确的占位符/格式破坏、隐私泄漏等，提交前必须处理；
+- **review warning**：残留日文、原文未翻译、重复原文出现不同译法、术语差异、可能合理的换行/数字差异等，需要结合语境判断。
+
+`DumpData` 默认只作为参考源，因此由旧 Dump 推导出的格式差异不会自动升级为 hard error。只有确认输入 Dump 与当前客户端一致时，才应使用：
+
+```bash
+python tools/qa.py --dump-ref <current-source-ref> --authoritative-dump
+```
+
+### 生成 Translation Memory
+
+```bash
+python tools/build_translation_memory.py
+```
+
+默认输出到 `qa/generated/`。该目录用于本地/CI 生成，不默认纳入版本控制。Translation Memory 会保留稳定 identity、日文 source、当前译文和公开 provenance；同一 source 存在多个译法时会单独生成 conflict 列表，避免 Agent 无脑复用。
+
+### 准备与校验 Agent batch
+
+```bash
+python tools/prepare_agent_batch.py
+```
+
+默认只输出真正没有可复用译文的 source。需要把唯一 Translation Memory 候选也交给 reviewer/Agent 时：
+
+```bash
+python tools/prepare_agent_batch.py --include-tm-candidates
+```
+
+Agent 返回 JSONL 后，在写回翻译数据之前先运行：
+
+```bash
+python tools/validate_agent_result.py \
+  qa/generated/agent-batch.jsonl \
+  path/to/agent-result.jsonl
+```
+
+数据格式分别由 `qa/schemas/agent-batch-record.schema.json` 和 `qa/schemas/agent-result-record.schema.json` 公开定义。
+
 ## 使用方法
 
 ### 直接使用

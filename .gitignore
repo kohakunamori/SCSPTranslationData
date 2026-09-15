@@ -4,3 +4,8 @@
 
 /.vs
 /scsp_localify/translate.py
+/qa/generated/
+/qa-report.json
+/qa-report.md
+/__pycache__/
+/tools/__pycache__/

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kohakunamori/SCSPTranslationData/qa/schemas/agent-result-record.schema.json",
+  "title": "SCSP Agent Translation Result Record",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "source_id",
+    "source",
+    "decision",
+    "translation"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "source_id": {"type": "string", "pattern": "^[0-9a-f]{24}$"},
+    "source": {"type": "string"},
+    "decision": {
+      "type": "string",
+      "enum": ["translate", "keep_source", "needs_review"]
+    },
+    "translation": {"type": "string"},
+    "note": {"type": "string"}
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "description": "Reviewed shared terminology. Entries are contextual guidance, not blind global replacements.",
+  "terms": [
+    {
+      "source": "プロデュース",
+      "preferred": ["育成"],
+      "match": "contains",
+      "scopes": ["localify", "local2", "scenario"],
+      "note": "Core gameplay system term."
+    },
+    {
+      "source": "プロデュースカード",
+      "preferred": ["育成卡"],
+      "match": "contains",
+      "scopes": ["localify", "local2", "scenario"]
+    },
+    {
+      "source": "サポートキャラ",
+      "preferred": ["支援角色"],
+      "match": "contains",
+      "scopes": ["localify", "local2", "scenario"]
+    },
+    {
+      "source": "アイドル",
+      "preferred": ["偶像"],
+      "match": "contains",
+      "scopes": ["localify", "local2", "scenario"]
+    },
+    {
+      "source": "アイドルスキル",
+      "preferred": ["偶像技能"],
+      "match": "contains",
+      "scopes": ["localify", "local2", "scenario"]
+    },
+    {
+      "source": "レッスン",
+      "preferred": ["课程"],
+      "match": "contains",
+      "scopes": ["localify", "local2", "scenario"]
+    },
+    {
+      "source": "スペシャルレッスン",
+      "preferred": ["特别课程"],
+      "match": "contains",
+      "scopes": ["localify", "local2", "scenario"]
+    },
+    {
+      "source": "オーディション",
+      "preferred": ["试镜"],
+      "match": "contains",
+      "scopes": ["localify", "local2", "scenario"]
+    },
+    {
+      "source": "お出かけ",
+      "preferred": ["外出"],
+      "match": "contains",
+      "scopes": ["localify", "local2", "scenario"]
+    },
+    {
+      "source": "デッキ",
+      "preferred": ["卡组"],
+      "match": "contains",
+      "scopes": ["localify", "local2"]
+    },
+    {
+      "source": "スコア",
+      "preferred": ["分数"],
+      "match": "contains",
+      "scopes": ["localify", "local2", "scenario"]
+    },
+    {
+      "source": "コンボ",
+      "preferred": ["连击"],
+      "match": "contains",
+      "scopes": ["localify", "local2"]
+    },
+    {
+      "source": "ファン数",
+      "preferred": ["粉丝数"],
+      "match": "contains",
+      "scopes": ["localify", "local2"]
+    },
+    {
+      "source": "信頼度",
+      "preferred": ["信赖度"],
+      "match": "contains",
+      "scopes": ["localify", "local2"]
+    },
+    {
+      "source": "マニー",
+      "preferred": ["金币"],
+      "match": "contains",
+      "scopes": ["localify", "local2", "scenario"]
+    },
+    {
+      "source": "ジュエル",
+      "preferred": ["宝石"],
+      "match": "contains",
+      "scopes": ["localify", "local2", "scenario"]
+    },
+    {
+      "source": "プリズムジュエル",
+      "preferred": ["棱镜宝石"],
+      "match": "contains",
+      "scopes": ["localify", "local2", "scenario"]
+    },
+    {
+      "source": "ストーリー",
+      "preferred": ["剧情"],
+      "match": "contains",
+      "scopes": ["localify", "local2"]
+    },
+    {
+      "source": "ミッション",
+      "preferred": ["任务"],
+      "match": "contains",
+      "scopes": ["localify", "local2"]
+    },
+    {
+      "source": "報酬",
+      "preferred": ["奖励"],
+      "match": "contains",
+      "scopes": ["localify", "local2", "scenario"]
+    },
+    {
+      "source": "衣装",
+      "preferred": ["服装"],
+      "match": "contains",
+      "scopes": ["localify", "local2", "scenario"]
+    },
+    {
+      "source": "アクセサリー",
+      "preferred": ["饰品"],
+      "match": "contains",
+      "scopes": ["localify", "local2", "scenario"]
+    },
+    {
+      "source": "髪型",
+      "preferred": ["发型"],
+      "match": "contains",
+      "scopes": ["localify", "local2"]
+    },
+    {
+      "source": "設定",
+      "preferred": ["设置"],
+      "match": "exact",
+      "scopes": ["localify", "local2"]
+    },
+    {
+      "source": "閉じる",
+      "preferred": ["关闭"],
+      "match": "exact",
+      "scopes": ["localify", "local2"]
+    },
+    {
+      "source": "キャンセル",
+      "preferred": ["取消"],
+      "match": "exact",
+      "scopes": ["localify", "local2"]
+    },
+    {
+      "source": "確認",
+      "preferred": ["确认"],
+      "match": "exact",
+      "scopes": ["localify", "local2"]
+    }
+  ],
+  "preserve_terms": [
+    "THE IDOLM@STER",
+    "L'Antica",
+    "ALSTROEMERIA",
+    "SHHis",
+    "CoMETIK"
+  ]
+}

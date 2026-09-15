@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "description": "Public, model-agnostic QA policy for SCSP Simplified Chinese localization.",
+  "hard_format_components": ["brace", "printf", "tags"],
+  "surface_policy": {
+    "localify": {
+      "newline": "error",
+      "nbsp": "error",
+      "numeric": "error",
+      "percentage": "error"
+    },
+    "local2": {
+      "newline": "warning",
+      "nbsp": "warning",
+      "numeric": "warning",
+      "percentage": "warning"
+    },
+    "scenario": {
+      "newline": "warning",
+      "nbsp": "warning",
+      "numeric": "warning",
+      "percentage": "warning"
+    },
+    "lyrics": {
+      "newline": "ignore",
+      "nbsp": "warning",
+      "numeric": "warning",
+      "percentage": "warning"
+    }
+  },
+  "privacy_patterns": [
+    {
+      "name": "windows-user-profile-path",
+      "pattern": "(?i)[A-Z]:\\\\Users\\\\[^\\\\\r\n]+"
+    },
+    {
+      "name": "windows-project-absolute-path",
+      "pattern": "(?i)[A-Z]:\\\\(?:Project|Projects|Workspace|Workspaces)\\\\"
+    },
+    {
+      "name": "unix-home-absolute-path",
+      "pattern": "(?m)(?:/Users/|/home/)[A-Za-z0-9._-]+/"
+    },
+    {
+      "name": "authorization-bearer",
+      "pattern": "(?i)Authorization\\s*:\\s*Bearer\\s+[A-Za-z0-9._~+/-]{12,}"
+    }
+  ],
+  "warning_limits": {
+    "console_examples_per_code": 12,
+    "duplicate_translation_groups": 100
+  }
+}
