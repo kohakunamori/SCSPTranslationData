@@ -11,6 +11,28 @@ from qa_common import DATA, QA, load_current_localizetext_source, load_json, wri
 
 KANA_RE = re.compile(r"[\u3041-\u3096\u309d-\u309f\u30a1-\u30fa\u30fd-\u30ff\uff66-\uff9d]")
 HAN_RE = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]")
+MARKUP_TAG_RE = re.compile(r"<(?P<close>/)?(?P<name>link|color)(?:=[^>]*)?>", re.I)
+
+
+def markup_balance_errors(text: str) -> list[str]:
+    stack: list[str] = []
+    errors: list[str] = []
+    for match in MARKUP_TAG_RE.finditer(text):
+        name = match.group("name").lower()
+        if not match.group("close"):
+            stack.append(name)
+            continue
+        if not stack:
+            errors.append(f"orphan closing {name}")
+            continue
+        if stack[-1] != name:
+            errors.append(f"closing {name} while {stack[-1]} is open")
+            if name in stack:
+                stack.remove(name)
+            continue
+        stack.pop()
+    errors.extend(f"unclosed {name}" for name in reversed(stack))
+    return errors
 
 
 def source_class(text: str) -> str:
@@ -36,6 +58,8 @@ def audit_current_localizetext(
     missing_examples: list[dict[str, str]] = []
     actionable_examples: list[dict[str, str | None]] = []
     missing_tables: list[dict[str, Any]] = []
+    malformed_markup_rows = 0
+    malformed_markup_examples: list[dict[str, Any]] = []
 
     for table_name, source_table in source.items():
         if not isinstance(source_table, dict):
@@ -67,6 +91,21 @@ def audit_current_localizetext(
                 else:
                     status = "changed"
 
+                source_markup_errors = markup_balance_errors(source_text)
+                target_markup_errors = markup_balance_errors(target)
+                if not source_markup_errors and target_markup_errors:
+                    malformed_markup_rows += 1
+                    if len(malformed_markup_examples) < example_limit:
+                        malformed_markup_examples.append(
+                            {
+                                "table": table_name,
+                                "key": key,
+                                "source": source_text,
+                                "translation": target,
+                                "errors": target_markup_errors,
+                            }
+                        )
+
             counts[status] += 1
 
             if status in {"missing_kana", "same_kana", "changed_kana_residual"}:
@@ -88,6 +127,7 @@ def audit_current_localizetext(
         counts["missing_kana"]
         + counts["same_kana"]
         + counts["changed_kana_residual"]
+        + malformed_markup_rows
     )
 
     source_tables = {
@@ -135,7 +175,10 @@ def audit_current_localizetext(
             "missing_kana",
             "same_kana",
             "changed_kana_residual",
+            "malformed_markup",
         ],
+        "malformed_markup_rows": malformed_markup_rows,
+        "malformed_markup_examples": malformed_markup_examples,
         "missing_examples": missing_examples,
         "actionable_examples": actionable_examples,
         "missing_table_inventory": sorted(
@@ -156,6 +199,7 @@ def markdown_report(report: dict[str, Any]) -> str:
         f"- Mapped rows: **{report['audit']['mapped_rows']}**",
         f"- Missing rows: **{report['audit']['missing_rows']}**",
         f"- Actionable rows: **{report['audit']['actionable_rows']}**",
+        f"- Malformed current link/color markup rows: **{report['audit']['malformed_markup_rows']}**",
         f"- Extra historical translation rows: **{report['audit']['extra_translation_rows']}**",
         "",
         "## Status counts",
@@ -170,7 +214,8 @@ def markdown_report(report: dict[str, Any]) -> str:
         "This gate proves coverage against the bundled current 2.17 localizetext source universe. "
         "It intentionally does not require source/translation placeholder, newline, NBSP, or numeric "
         "signatures to be textually identical because runtime localization templates may differ from "
-        "the current Japanese source representation.",
+        "the current Japanese source representation. It does require translation-side link/color markup "
+        "to remain structurally balanced whenever the authoritative current source markup is balanced.",
         "",
     ]
     return "\n".join(lines)
@@ -249,6 +294,7 @@ def main() -> int:
                 "mapped_rows": audit["mapped_rows"],
                 "missing_rows": audit["missing_rows"],
                 "actionable_rows": audit["actionable_rows"],
+                "malformed_markup_rows": audit["malformed_markup_rows"],
                 "extra_translation_rows": audit["extra_translation_rows"],
                 "status_counts": audit["status_counts"],
             },

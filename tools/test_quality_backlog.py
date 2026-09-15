@@ -75,6 +75,29 @@ class QualityBacklogTests(unittest.TestCase):
         self.assertTrue(all(row.get("source_authority") == "current-key" for row in current_key))
         self.assertTrue(all(row.get("requires_source_verification") is False for row in current_key))
 
+    def test_historical_localify_items_are_cross_checked_against_current_source(self) -> None:
+        historical_localify = [
+            row
+            for row in self.items
+            if row.get("surface") == "localify"
+            and "DumpData" in row.get("provenance", "")
+        ]
+        self.assertTrue(historical_localify)
+        statuses = {
+            (row.get("metadata") or {}).get("current_source_status")
+            for row in historical_localify
+        }
+        self.assertTrue(statuses.issubset({"match", "changed", "missing"}))
+        self.assertNotIn(None, statuses)
+
+        current_confirmed_p1 = [
+            row
+            for row in historical_localify
+            if row.get("priority") == "P1"
+            and (row.get("metadata") or {}).get("current_source_status") == "match"
+        ]
+        self.assertEqual(current_confirmed_p1, [])
+
 
 if __name__ == "__main__":
     unittest.main()

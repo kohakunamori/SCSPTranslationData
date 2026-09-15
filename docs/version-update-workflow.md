@@ -79,7 +79,7 @@ python tools/build_translation_memory.py
 
 Treat hard errors as blockers. Review warnings according to their surface and context.
 
-The current-localizetext audit is a separate hard coverage gate. It must show every current source row mapped and no current same-kana/translated-kana-residual actionable rows before the version update is considered source-complete.
+The current-localizetext audit is a separate hard coverage gate. It must show every current source row mapped, no current same-kana/translated-kana-residual actionable rows, and zero translation-side unbalanced `link`/`color` markup when the authoritative source markup is balanced before the version update is considered source-complete.
 
 The current-Drama audit is also a hard gate. A new client version must independently rebuild the Drama source universe, preserve the consumer selection rule, verify runtime-key uniqueness, and classify new/deleted/source-changed dialogue rows before carrying translations forward.
 

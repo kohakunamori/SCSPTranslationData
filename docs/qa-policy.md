@@ -30,7 +30,7 @@ For the main `localify` surface, the repository now carries a separate current S
 python tools/audit_current_localizetext.py
 ```
 
-This gate requires every current source table/key to map to a maintained translation and rejects current same-kana or translated-kana-residual rows. The accepted checkpoint is **138,036 / 138,036 mapped / 0 missing / 0 actionable**.
+This gate requires every current source table/key to map to a maintained translation, rejects current same-kana or translated-kana-residual rows, and rejects translation-side unbalanced `link`/`color` markup when the authoritative current source markup is balanced. The accepted checkpoint is **138,036 / 138,036 mapped / 0 missing / 0 actionable / 0 malformed current markup**.
 
 Current Drama has an independent authoritative snapshot and gate:
 
@@ -42,7 +42,7 @@ The Drama gate verifies deterministic source-snapshot hashes, 267/267 scenario r
 
 Bare Drama `uniqueId` values are not globally safe identities: eight current scenarios contain duplicate unique IDs. The accepted runtime key remains unique because it includes exact source text.
 
-It intentionally does **not** require source and target placeholder, rich-text, numeric, newline, or NBSP signatures to be identical. Current Japanese `localizetext` may contain concrete/static values while the maintained localization uses runtime templates or different display wrapping. Applying the generic signature rules to the entire current source universe would create false blockers.
+It intentionally does **not** require source and target placeholder, rich-text, numeric, newline, or NBSP signatures to be textually identical. Current Japanese `localizetext` may contain concrete/static values while the maintained localization uses runtime templates or different display wrapping. Applying generic signature equality to the entire current source universe would create false blockers. The narrower markup-balance gate is different: it checks whether the maintained translation is structurally self-consistent, not whether its tag sequence is byte-identical to the source.
 
 If a contributor has verified that a dump/ref is current and authoritative, run:
 
@@ -71,7 +71,7 @@ A warning can indicate a real translation problem, a context-sensitive translati
 
 Exact-source conflicts are split by semantics: if maintained outputs differ only by ordinary spaces, NBSP, or full-width spaces, QA reports `duplicate-source-layout-variant` and the backlog treats it as P3 layout debt instead of a P2 semantic conflict. Canonical names whose reviewed source and translation are the same are also accepted as same-form automatically.
 
-Backlog entries with historical `DumpData` provenance carry `requires_source_verification=true`. This is especially important for protected-format and numeric findings: a P1/P2 priority indicates review value, not permission to repair against a stale source snapshot.
+Backlog entries with historical `DumpData` provenance carry `requires_source_verification=true`. Historical localify items are additionally cross-checked by exact table/key against the bundled current 2.17 source and expose `metadata.current_source_status = match / changed / missing` (plus `metadata.current_source` when changed). This is especially important for protected-format and numeric findings: a P1/P2 priority indicates review value, not permission to repair against a stale source snapshot.
 
 Numeric comparison is intentionally asymmetric. Explicit Arabic/full-width numeric tokens in the source remain the anchor; target-side Chinese forms are used only to fill those source-token deficits for reviewed patterns such as `4 → 四名`, `2 → 两行`, `1 → 第一季`, `10 → 十次`, and `2倍 → 翻倍`. Chinese numerals are not independently harvested from arbitrary target prose, avoiding false positives such as `上一个`.
 

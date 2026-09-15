@@ -48,12 +48,13 @@ class CurrentLocalizetextAuditTests(unittest.TestCase):
         self.assertEqual(audit["mapped_rows"], 138036)
         self.assertEqual(audit["missing_rows"], 0)
         self.assertEqual(audit["actionable_rows"], 0)
+        self.assertEqual(audit["malformed_markup_rows"], 0)
         self.assertEqual(
             audit["status_counts"],
             {
-                "changed": 120932,
+                "changed": 120921,
                 "same_han": 596,
-                "same_safe": 16508,
+                "same_safe": 16519,
             },
         )
         self.assertEqual(audit["extra_translation_rows"], 5149)
@@ -79,6 +80,22 @@ class CurrentLocalizetextAuditTests(unittest.TestCase):
         self.assertEqual(audit["status_counts"]["same_kana"], 1)
         self.assertEqual(audit["status_counts"]["changed"], 1)
         self.assertEqual(audit["status_counts"]["missing_safe"], 1)
+
+    def test_malformed_translation_markup_is_actionable(self) -> None:
+        source = {
+            "table": {
+                "1": '<link="7"><color=#FF3300>サーチ</color></link>',
+            }
+        }
+        translation = {
+            "table": {
+                "1": '<color=#FF3300>检索</color></link>',
+            }
+        }
+        audit = audit_current_localizetext(source, translation)
+        self.assertEqual(audit["malformed_markup_rows"], 1)
+        self.assertEqual(audit["actionable_rows"], 1)
+        self.assertEqual(audit["malformed_markup_examples"][0]["table"], "table")
 
 
 if __name__ == "__main__":

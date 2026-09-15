@@ -158,7 +158,7 @@ python tools/build_quality_backlog.py \
 
 所有 backlog item 都明确带有 `auto_apply_allowed=false`。它们是 review 任务，不是自动修改指令。详见 [社区质量 Backlog](docs/community-quality-backlog.md)。
 
-对于依赖历史 `DumpData` 的任务，backlog 还会标记 `source_authority=historical-reference` 与 `requires_source_verification=true`，提醒 Agent/贡献者先确认当前权威原文，再修复占位符、数字或源文敏感问题。
+对于依赖历史 `DumpData` 的任务，backlog 还会标记 `source_authority=historical-reference` 与 `requires_source_verification=true`。历史 `localify` 项会进一步按 table/key 对照内置的 2.17 current snapshot，并写入 `metadata.current_source_status=match|changed|missing`；当 source 已变化时还会附上 `metadata.current_source`。因此历史 P1/P2 可以保留审计价值，但不会再被误读成当前客户端缺陷。
 
 CI 对当前 source-key 数据还有两道额外质量门：
 

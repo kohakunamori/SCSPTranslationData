@@ -21,6 +21,13 @@ class QaCommonTests(unittest.TestCase):
         self.assertEqual(sig["lf"], 1)
         self.assertEqual(sig["nbsp"], 1)
 
+    def test_printf_signature_ignores_game_percent_words(self) -> None:
+        self.assertEqual(format_signature("70%DOWN 50%UP")["printf"], {})
+        self.assertEqual(
+            format_signature("%s %d %1$s %%")["printf"],
+            {"%s": 1, "%d": 1, "%1$s": 1, "%%": 1},
+        )
+
     def test_numeric_signature_normalizes_full_width_digits(self) -> None:
         self.assertEqual(numeric_signature("第３章 10回"), Counter({"3": 1, "10": 1}))
         from qa_common import numeric_signatures_match

@@ -101,7 +101,8 @@ Current Drama has a separate authoritative source/translation path: `qa/current-
 Generated items make this explicit when provenance is available:
 
 - `source_authority=current-key` / `requires_source_verification=false`: source identity comes from a maintained source-key surface;
-- `source_authority=historical-reference` / `requires_source_verification=true`: source came from historical `DumpData` and must be rechecked before source-sensitive repairs.
+- `source_authority=historical-reference` / `requires_source_verification=true`: source came from historical `DumpData` and must be rechecked before source-sensitive repairs;
+- historical `localify` items also carry `metadata.current_source_status = match / changed / missing` from the bundled 2.17 snapshot. When the status is `changed`, `metadata.current_source` records the current authoritative text so a stale historical warning is not mistaken for a current defect.
 
 ## Recommended community workflow
 
@@ -151,17 +152,17 @@ The generated summary, not a hard-coded number in documentation, is the authorit
 
 ## Verified checkpoint
 
-At the September 15, 2026 current-source closure checkpoint, the full repository QA is **0 hard errors / 2,077 review warnings**. The deduplicated backlog is **2,030 tasks**: **35 P1 / 1,084 P2 / 911 P3**.
+At the September 15, 2026 current-source quality checkpoint, the full repository QA is **0 hard errors / 2,051 review warnings**. The deduplicated backlog is **2,004 tasks**: **18 P1 / 1,072 P2 / 914 P3**. The 18 remaining P1 tasks are all historical `DumpData` rows whose source has changed in the bundled 2.17 snapshot; **current-confirmed P1 = 0**.
 
 At this checkpoint:
 
 - the strict exact-source canonicalizer reports **0 candidates**;
 - the `current-key` backlog gate reports **0 blockers**; the only current-key item is the explicitly grandfathered legacy `baseline-format` fixture;
 - the default Agent batch has **0 verified-current unresolved records**;
-- the full current 2.17 localizetext audit is **138,036 / 138,036 mapped / 0 missing / 0 actionable**;
+- the full current 2.17 localizetext audit is **138,036 / 138,036 mapped / 0 missing / 0 actionable / 0 malformed current link/color markup**; 30 current rows with proven template/tag contamination were repaired before this checkpoint;
 - the current 2.17 Drama audit is **267/267 scenarios / 11,402/11,402 mapped / 0 missing / 0 extra / 0 target kana**;
 - historical Dump-only backlog/skipped counts remain useful as legacy review metadata, but they are no longer evidence of unresolved current `localify` source because current `localify` has its own published source snapshot;
-- the remaining repository backlog is historical-reference/cross-surface review debt plus the one documented current-key baseline fixture, not a claim that all 2,077 warnings are defects in the current client.
+- the remaining repository backlog is historical-reference/cross-surface review debt plus the one documented current-key baseline fixture, not a claim that all 2,051 warnings are defects in the current client. In particular, the 18 P1 rows are retained for historical review but all report `current_source_status=changed`.
 
 Regenerate locally for authoritative current counts.
 

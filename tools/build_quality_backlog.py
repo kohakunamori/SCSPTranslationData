@@ -16,6 +16,7 @@ from qa_common import (
     has_han,
     has_kana,
     has_unpreserved_kana,
+    load_current_localizetext_source,
     load_json,
     load_policy,
     lyric_translation_only,
@@ -109,6 +110,37 @@ def source_equal_allowed(
     if isinstance(by_surface, dict) and source in set(by_surface.get(surface, [])):
         return True
     return canonical_same_form(source, names)
+
+
+def annotate_current_localify_source(items: list[dict[str, Any]]) -> Counter[str]:
+    current_source, _ = load_current_localizetext_source()
+    counts: Counter[str] = Counter()
+    if not isinstance(current_source, dict):
+        return counts
+
+    for item in items:
+        if item.get("surface") != "localify" or "DumpData" not in item.get("provenance", ""):
+            continue
+        identity = item.get("identity")
+        if not isinstance(identity, str) or ":" not in identity:
+            continue
+        table, key = identity.split(":", 1)
+        table_rows = current_source.get(table)
+        current = table_rows.get(key) if isinstance(table_rows, dict) else None
+        if not isinstance(current, str):
+            status = "missing"
+        elif current == item.get("source"):
+            status = "match"
+        else:
+            status = "changed"
+
+        metadata = dict(item.get("metadata") or {})
+        metadata["current_source_status"] = status
+        if status == "changed":
+            metadata["current_source"] = current
+        item["metadata"] = metadata
+        counts[status] += 1
+    return counts
 
 
 def known_format_exception(
@@ -357,8 +389,13 @@ def build_items(dump_ref: str | None) -> tuple[list[dict[str, Any]], dict[str, A
             detail="grandfathered duplicate scenario key",
         )
 
+    current_source_status = annotate_current_localify_source(items)
     items.sort(key=lambda x: (x["priority"], x["category"], x["surface"], x["identity"], x["backlog_id"]))
-    meta = {"dump_ref": dump_ref, "aligned_records": len(records)}
+    meta = {
+        "dump_ref": dump_ref,
+        "aligned_records": len(records),
+        "historical_localify_current_source_status": dict(sorted(current_source_status.items())),
+    }
     return items, meta
 
 
@@ -380,6 +417,17 @@ def markdown_summary(summary: dict[str, Any]) -> str:
     lines += ["", "## Category", "", "| Category | Count |", "| --- | ---: |"]
     for category, count in summary["by_category"].items():
         lines.append(f"| {category} | {count} |")
+    current_status = summary.get("filtered_historical_localify_current_source_status", {})
+    if current_status:
+        lines += [
+            "",
+            "## Historical localify vs current source",
+            "",
+            "| Current source status | Count |",
+            "| --- | ---: |",
+        ]
+        for status, count in current_status.items():
+            lines.append(f"| `{status}` | {count} |")
     lines += [
         "",
         "Generated entries are review tasks, not automatic edit instructions. auto_apply_allowed is false for every item.",
@@ -440,6 +488,12 @@ def main() -> int:
     by_priority = Counter(x["priority"] for x in items)
     by_category = Counter(x["category"] for x in items)
     by_code = Counter(x["code"] for x in items)
+    filtered_current_source_status = Counter(
+        status
+        for item in items
+        for status in [(item.get("metadata") or {}).get("current_source_status")]
+        if isinstance(status, str)
+    )
     summary = {
         "schema_version": 1,
         **meta,
@@ -450,6 +504,9 @@ def main() -> int:
         "by_priority": dict(sorted(by_priority.items())),
         "by_category": dict(sorted(by_category.items())),
         "by_code": dict(sorted(by_code.items())),
+        "filtered_historical_localify_current_source_status": dict(
+            sorted(filtered_current_source_status.items())
+        ),
         "filters": {
             "priority": args.priority or [],
             "category": args.category or [],

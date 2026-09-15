@@ -22,7 +22,7 @@ LOCALIZETEXT_QA_SCOPE_SNAPSHOT = CURRENT_SOURCE / "localizetext-2.17-qa-scope.js
 LOCALIZETEXT_SOURCE_MANIFEST = CURRENT_SOURCE / "manifest.json"
 
 BRACE_RE = re.compile(r"\{[^{}]+\}")
-PRINTF_RE = re.compile(r"%(?:\d+\$)?[-+#0 .'\d]*(?:\.\d+)?[A-Za-z%]")
+PRINTF_RE = re.compile(r"%(?:\d+\$)?[-+#0 .'\d]*(?:\.\d+)?[diuoxXfFeEgGaAcspn%]")
 TAG_RE = re.compile(r"<[^>]+>")
 KANA_RE = re.compile(r"[\u3041-\u3096\u309d-\u309f\u30a1-\u30fa\u30fd-\u30ff]")
 HAN_RE = re.compile(r"[\u3400-\u9fff]")
