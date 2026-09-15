@@ -4,7 +4,16 @@
 
 
 
-- SCSP 简中翻译仓库
+- SCSP 简体中文翻译数据仓库。
+
+当前维护分支为 `TransData`。本仓库只保存公开的翻译数据与相关辅助文件，不包含游戏客户端、账号信息、运行日志、抓包、私有服务端或本地运行环境。
+
+## 与插件仓库的关系
+
+- 公开插件仓库：[kohakunamori/scsp-localify](https://github.com/kohakunamori/scsp-localify)
+- `scsp-localify` 通过 `resources/schinese` Git submodule 固定引用本仓库的已验证翻译版本。
+- 翻译文件保持 `scsp_localify/...` 目录结构，供插件直接打包或加载。
+- 与客户端保存、离线服务、个人环境有关的内容不属于本仓库，也不应提交到本仓库。
 
 
 
@@ -12,9 +21,9 @@
 
 ## 获取原文
 
-- 前往 [DumpData](https://github.com/chinosk6/SCSPTranslationData/tree/DumpData) 分支寻找
-- 或者[自行 Dump](https://github.com/chinosk6/scsp-localify#%E8%87%AA%E8%A1%8C-dump-%E5%8E%9F%E6%96%87)（推荐）
-  - [DumpData](https://github.com/chinosk6/SCSPTranslationData/tree/DumpData) 分支可能更新不及时。若未在此分支找到你想翻译的内容，可以尝试[自行 Dump](https://github.com/chinosk6/scsp-localify#%E8%87%AA%E8%A1%8C-dump-%E5%8E%9F%E6%96%87)。
+- 前往 [DumpData](https://github.com/kohakunamori/SCSPTranslationData/tree/DumpData) 分支寻找。
+- 或使用 [scsp-localify 的文本 Dump 功能](https://github.com/kohakunamori/scsp-localify#%E8%87%AA%E8%A1%8C-dump-%E5%8E%9F%E6%96%87) 获取当前客户端实际原文（推荐）。
+  - `DumpData` 可能落后于当前客户端；提交译文前应尽量确认原文仍然匹配。
 
 
 
