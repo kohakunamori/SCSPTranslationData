@@ -6,6 +6,8 @@ This workflow keeps existing translations while making source changes reviewable
 
 Prefer a dump from the current supported client. Use the repository `DumpData` branch as a historical/reference source, not an assumption that it is current.
 
+For the currently supported 2.17.0 main text surface, the public authoritative source anchor is already bundled under `qa/current-source/`. See [current-source-snapshot.md](current-source-snapshot.md).
+
 Collect all relevant surfaces:
 
 - main localify tables;
@@ -48,6 +50,8 @@ Separate at least:
 
 Only unresolved/new/changed text should normally need fresh translation.
 
+For a new supported client version, create a new immutable current-source snapshot and compare table/key identity against the previous snapshot. Do not silently overwrite the old source universe or infer source changes from translated text.
+
 ## 5. Translate with context
 
 Use `qa/glossary.json`, `qa/names.json`, existing nearby translations, and generated translation memory.
@@ -60,6 +64,7 @@ Run:
 
 ```bash
 python tools/qa.py
+python tools/audit_current_localizetext.py
 git diff --check
 ```
 
@@ -70,6 +75,8 @@ python tools/build_translation_memory.py
 ```
 
 Treat hard errors as blockers. Review warnings according to their surface and context.
+
+The current-localizetext audit is a separate hard coverage gate. It must show every current source row mapped and no current same-kana/translated-kana-residual actionable rows before the version update is considered source-complete.
 
 ## 7. Submit a bounded PR
 

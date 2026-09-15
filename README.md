@@ -17,7 +17,7 @@
 - `TransData`：当前简体中文翻译数据，也是默认维护分支。
 - `DumpData`：原始 Dump 数据参考。该分支可能落后于当前客户端，不应默认认为它就是最新原文。
 
-提交译文前，推荐优先使用当前客户端实际 Dump 的文本与 `DumpData` 交叉确认。
+提交译文前，`localify` 应优先使用仓库内 `qa/current-source/` 的当前版本 snapshot；其他 surface 再使用独立验证的当前客户端 Dump。历史 `DumpData` 仅用于兼容/对照，不应作为最新原文假设。
 
 ## 当前数据内容
 
@@ -59,8 +59,10 @@ GitHub 侧也提供了翻译质量 / source update Issue 表单与 Pull Request 
 - `qa/rules.json`：结构、格式、隐私与各文本表面的 QA 策略；
 - `qa/baseline-exceptions.json`：公开记录引入 QA 前已经存在的窄范围历史例外，新问题不会因此被放过；
 - `qa/backlog-policy.json`：将 QA warning 映射为 P1/P2/P3 社区 review 任务；
+- `qa/current-source/`：公开的 SCSP 2.17.0 `localizetext` 当前原文快照、历史 overlap scope 与可验证 manifest；
 - `qa/schemas/`：Agent batch/result 的公开 JSON Schema；
 - `tools/qa.py`：统一质量检查入口；
+- `tools/audit_current_localizetext.py`：针对完整 current 2.17 `localizetext` universe 的 authoritative coverage/kana closure gate；
 - `tools/build_translation_memory.py`：从公开的 `TransData` 与 `DumpData` 对齐生成 Translation Memory。
 - `tools/build_quality_backlog.py`：把 repository-wide warning 去重并整理成稳定、可筛选的社区质量任务；
 - `tools/canonicalize_exact_source_conflicts.py`：检测严格可复现的 exact-source 双译分叉；默认只生成 proposal，`--apply` 才会修改 `local2.json`；
@@ -68,6 +70,26 @@ GitHub 侧也提供了翻译质量 / source update Issue 表单与 Pull Request 
 - `tools/validate_agent_result.py`：在应用 Agent 输出前验证 source identity、覆盖率和格式签名。
 
 这些文件都应保持可公开复现，不依赖私人路径、账号、私有服务端或内部调试环境。
+
+### 当前 2.17 原文快照
+
+仓库现在直接公开当前 SCSP 2.17.0 的主 `localizetext` 原文 universe：
+
+- **5,631 tables / 138,036 source rows**；
+- 完整 gzip snapshot 解压后 SHA-256：`33fe9de689b3ad0a3a94a6fce5f5805bca523d320f78286d9fc09a2c5999f99f`；
+- 当前维护的 `localify.json` 对该 universe 为 **138,036 / 138,036 mapped**；
+- **0 missing / 0 same-kana / 0 translated-kana-residual / 0 actionable**；
+- 另有 5,149 条维护中的历史 translation rows 不属于当前 2.17 source universe，作为兼容/历史数据保留。
+
+运行：
+
+```bash
+python tools/audit_current_localizetext.py
+```
+
+历史 `DumpData` 的 localify 只有 44,860 行，其中仅 39,711 个 table/key 仍存在于当前 2.17；这部分又有 **3,596 / 39,711（9.06%）** 的原文已经改变，且当前版本另有 **98,325** 行从未出现在旧 Dump 中。因此，对于 `localify` table/key，社区和 Agent 应优先使用 current snapshot，而不是把 `DumpData` 当成当前原文。
+
+完整格式、hash、历史对比和使用边界见 [Current SCSP 2.17 Source Snapshot](docs/current-source-snapshot.md)。
 
 ### 运行 QA
 
@@ -85,6 +107,8 @@ QA 将结果区分为：
 ```bash
 python tools/qa.py --dump-ref <current-source-ref> --authoritative-dump
 ```
+
+`tools/qa.py` 与 `tools/audit_current_localizetext.py` 的职责不同：前者是兼容历史数据、术语、格式和跨 surface 一致性的 review 层；后者才是当前 2.17 主文本 surface 的完整覆盖 gate。不要把 full current snapshot 直接套进旧的 placeholder/NBSP/数字“逐 token 同构”规则，因为当前日文静态值与本地化运行时模板可能有意使用不同表示。
 
 ### 生成社区质量 Backlog
 
@@ -145,7 +169,7 @@ python tools/prepare_agent_batch.py
 python tools/prepare_agent_batch.py --include-tm-candidates
 ```
 
-默认 batch 还会排除仅能从历史 `DumpData` 推导 source 的 unresolved localify/scenario 文本。只有已经独立确认某个 dump/ref 与当前客户端一致时，才应显式使用：
+默认 batch 仍保留历史 `DumpData` 对齐语义，并排除无法证明为 current 的 unresolved localify/scenario 文本。对于 localify，当前原文现在可直接从 `qa/current-source/` 核验；scenario 仍需独立的当前 source 证据。只有确认输入 Dump 与目标客户端一致时，才应显式使用：
 
 ```bash
 python tools/prepare_agent_batch.py \
@@ -153,7 +177,7 @@ python tools/prepare_agent_batch.py \
   --authoritative-dump
 ```
 
-在当前公开 checkpoint 中，所有可由维护中的 source-key 直接确认的 unresolved 文本已经闭合，因此默认 batch 可以为空；被排除的历史 Dump-only source 仍需先完成当前客户端 source verification。
+在当前公开 checkpoint 中，默认 batch 可以为空。不要把其 historical-Dump skipped 计数解释成当前 localify 未翻译数量：current 2.17 full-source audit 已经是 **0 actionable**。
 
 Agent 返回 JSONL 后，在写回翻译数据之前先运行：
 

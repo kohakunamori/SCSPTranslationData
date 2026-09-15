@@ -70,7 +70,9 @@ python tools/prepare_agent_batch.py \
 
 Never mark historical `DumpData` authoritative simply to make more rows available to an Agent.
 
-If all maintained source-key text is already resolved, the default Agent batch can legitimately be empty. This does not mean historical `localify`/scenario backlog is solved; it means that work is intentionally blocked on current-source verification.
+If all maintained source-key text is already resolved, the default Agent batch can legitimately be empty. The batch keeps legacy DumpData alignment semantics and therefore must not be interpreted as a complete current-version defect inventory.
+
+For `localify`, current-source verification no longer requires a private dump: use `qa/current-source/localizetext-2.17-source.json.gz` and its manifest. The current public audit already proves 138,036/138,036 mapped with zero actionable current rows. Historical `DumpData` remains relevant for compatibility/history; scenario source verification remains a separate problem.
 
 The canonical public record schema is `qa/schemas/agent-batch-record.schema.json`.
 
@@ -126,6 +128,7 @@ After applying reviewed results, also run:
 ```bash
 python tools/canonicalize_exact_source_conflicts.py --check
 python tools/build_quality_backlog.py --check-current-key
+python tools/audit_current_localizetext.py
 ```
 
 The first prevents reintroducing mechanically closable exact-source divergence; the second prevents new quality debt on maintained source-key surfaces.

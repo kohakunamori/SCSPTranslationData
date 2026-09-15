@@ -17,6 +17,7 @@ body:
     attributes:
       label: Source provenance
       options:
+        - Bundled current localify snapshot
         - Current client dump verified
         - Public historical DumpData comparison
         - Other public reproducible source

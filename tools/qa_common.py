@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import gzip
+import hashlib
 import io
 import json
 import re
@@ -7,12 +9,17 @@ import subprocess
 import tarfile
 import unicodedata
 from collections import Counter
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Iterable
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "scsp_localify"
 QA = ROOT / "qa"
+CURRENT_SOURCE = QA / "current-source"
+LOCALIZETEXT_SOURCE_SNAPSHOT = CURRENT_SOURCE / "localizetext-2.17-source.json.gz"
+LOCALIZETEXT_QA_SCOPE_SNAPSHOT = CURRENT_SOURCE / "localizetext-2.17-qa-scope.json.gz"
+LOCALIZETEXT_SOURCE_MANIFEST = CURRENT_SOURCE / "manifest.json"
 
 BRACE_RE = re.compile(r"\{[^{}]+\}")
 PRINTF_RE = re.compile(r"%(?:\d+\$)?[-+#0 .'\d]*(?:\.\d+)?[A-Za-z%]")
@@ -46,6 +53,85 @@ CJK_UNITS = {"十": 10, "百": 100, "千": 1000, "万": 10000}
 def load_json(path: Path) -> Any:
     with path.open("r", encoding="utf-8-sig") as f:
         return json.load(f)
+
+
+@lru_cache(maxsize=1)
+def load_current_localizetext_source() -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    if not LOCALIZETEXT_SOURCE_SNAPSHOT.exists() or not LOCALIZETEXT_SOURCE_MANIFEST.exists():
+        return None, None
+
+    manifest = load_json(LOCALIZETEXT_SOURCE_MANIFEST)
+    if not isinstance(manifest, dict):
+        raise ValueError("current-source manifest must be a JSON object")
+
+    compressed = LOCALIZETEXT_SOURCE_SNAPSHOT.read_bytes()
+    expected_gzip_hash = manifest.get("gzip_sha256")
+    actual_gzip_hash = hashlib.sha256(compressed).hexdigest()
+    if isinstance(expected_gzip_hash, str) and actual_gzip_hash != expected_gzip_hash:
+        raise ValueError(
+            f"current-source gzip hash mismatch: expected {expected_gzip_hash}, got {actual_gzip_hash}"
+        )
+
+    raw = gzip.decompress(compressed)
+    expected_raw_hash = manifest.get("uncompressed_sha256")
+    actual_raw_hash = hashlib.sha256(raw).hexdigest()
+    if isinstance(expected_raw_hash, str) and actual_raw_hash != expected_raw_hash:
+        raise ValueError(
+            f"current-source raw hash mismatch: expected {expected_raw_hash}, got {actual_raw_hash}"
+        )
+
+    data = json.loads(raw.decode("utf-8-sig"))
+    if not isinstance(data, dict):
+        raise ValueError("current-source localizetext snapshot must be a JSON object")
+    tables = len(data)
+    rows = sum(len(value) for value in data.values() if isinstance(value, dict))
+    if manifest.get("tables") != tables or manifest.get("rows") != rows:
+        raise ValueError(
+            "current-source manifest count mismatch: "
+            f"manifest={manifest.get('tables')} tables/{manifest.get('rows')} rows, "
+            f"snapshot={tables} tables/{rows} rows"
+        )
+    return data, manifest
+
+
+@lru_cache(maxsize=1)
+def load_current_localizetext_qa_scope() -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    if not LOCALIZETEXT_QA_SCOPE_SNAPSHOT.exists() or not LOCALIZETEXT_SOURCE_MANIFEST.exists():
+        return None, None
+
+    manifest = load_json(LOCALIZETEXT_SOURCE_MANIFEST)
+    scope_meta = manifest.get("qa_scope") if isinstance(manifest, dict) else None
+    if not isinstance(scope_meta, dict):
+        raise ValueError("current-source manifest is missing qa_scope metadata")
+
+    compressed = LOCALIZETEXT_QA_SCOPE_SNAPSHOT.read_bytes()
+    expected_gzip_hash = scope_meta.get("gzip_sha256")
+    actual_gzip_hash = hashlib.sha256(compressed).hexdigest()
+    if isinstance(expected_gzip_hash, str) and actual_gzip_hash != expected_gzip_hash:
+        raise ValueError(
+            f"current-source QA scope gzip hash mismatch: expected {expected_gzip_hash}, got {actual_gzip_hash}"
+        )
+
+    raw = gzip.decompress(compressed)
+    expected_raw_hash = scope_meta.get("uncompressed_sha256")
+    actual_raw_hash = hashlib.sha256(raw).hexdigest()
+    if isinstance(expected_raw_hash, str) and actual_raw_hash != expected_raw_hash:
+        raise ValueError(
+            f"current-source QA scope raw hash mismatch: expected {expected_raw_hash}, got {actual_raw_hash}"
+        )
+
+    data = json.loads(raw.decode("utf-8-sig"))
+    if not isinstance(data, dict):
+        raise ValueError("current-source localizetext QA scope must be a JSON object")
+    tables = len(data)
+    rows = sum(len(value) for value in data.values() if isinstance(value, dict))
+    if scope_meta.get("tables") != tables or scope_meta.get("rows") != rows:
+        raise ValueError(
+            "current-source QA scope count mismatch: "
+            f"manifest={scope_meta.get('tables')} tables/{scope_meta.get('rows')} rows, "
+            f"snapshot={tables} tables/{rows} rows"
+        )
+    return data, scope_meta
 
 
 def write_json(path: Path, value: Any) -> None:

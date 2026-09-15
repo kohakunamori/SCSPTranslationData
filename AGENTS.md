@@ -73,13 +73,14 @@ Do not remove source lyric text merely to satisfy a kana-residue checker.
 
 Recommended flow:
 
-1. Compare the current source dump with existing `TransData`.
+1. For `localify`, use the bundled current 2.17 snapshot under `qa/current-source/` before consulting historical `DumpData`. For other surfaces, establish current source provenance before source-sensitive edits.
 2. Reuse exact, unambiguous existing translations where context is compatible.
 3. Apply the reviewed glossary and canonical names.
 4. Translate only unresolved source text.
 5. Run:
    ```bash
    python tools/qa.py
+   python tools/audit_current_localizetext.py
    ```
 6. When a `DumpData` ref is available, build a public translation-memory view:
    ```bash
@@ -114,6 +115,10 @@ Agent output is judged by the same QA gates as human output. Do not merge raw mo
 The public interchange schemas live under `qa/schemas/`. Do not invent a private-only result format when the public schema is sufficient.
 
 Do not use `--authoritative-dump` for the historical `DumpData` branch merely to increase batch size.
+
+The current localizetext snapshot is a source-coverage anchor, not a request to force source/target runtime templates into textual identity. A Japanese source can contain a concrete number or layout token while the maintained localized value intentionally uses a runtime placeholder or different wrapping. Use `audit_current_localizetext.py` for full current-version coverage/kana closure and keep `qa.py` for its documented review semantics.
+
+Historical `prepare_agent_batch.py` skip counts are not current localify defect counts. Current localify completeness is defined by the current-source audit.
 
 `canonicalize_exact_source_conflicts.py` is intentionally conservative. It only proposes a change when `local2` is the sole outlier in a two-way exact-source conflict, all maintained `localify` occurrences unanimously use the other target, the difference is not spacing-only, and protected/layout/numeric signatures are compatible. Review the proposal before using `--apply`.
 

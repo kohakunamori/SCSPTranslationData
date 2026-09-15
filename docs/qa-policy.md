@@ -24,6 +24,16 @@ Examples include:
 
 When source text comes only from the historical `DumpData` branch, source-derived differences are warnings by default because that branch can lag the current client.
 
+For the main `localify` surface, the repository now carries a separate current SCSP 2.17.0 source snapshot under `qa/current-source/`. Its authoritative coverage gate is:
+
+```bash
+python tools/audit_current_localizetext.py
+```
+
+This gate requires every current source table/key to map to a maintained translation and rejects current same-kana or translated-kana-residual rows. The accepted checkpoint is **138,036 / 138,036 mapped / 0 missing / 0 actionable**.
+
+It intentionally does **not** require source and target placeholder, rich-text, numeric, newline, or NBSP signatures to be identical. Current Japanese `localizetext` may contain concrete/static values while the maintained localization uses runtime templates or different display wrapping. Applying the generic signature rules to the entire current source universe would create false blockers.
+
 If a contributor has verified that a dump/ref is current and authoritative, run:
 
 ```bash
@@ -130,10 +140,11 @@ CI publishes:
 
 - a JSON QA report artifact;
 - a Markdown job summary.
+- a current-localizetext coverage audit JSON/Markdown artifact;
 - a generated quality-backlog JSONL and JSON/Markdown summary artifact.
 - an exact-source canonicalization proposal artifact.
 
-Warnings remain visible for community cleanup without globally blocking historical debt. Hard errors, strict canonicalization candidates, and non-exempt current-key backlog items fail the job.
+Warnings remain visible for community cleanup without globally blocking historical debt. Hard errors, current-localizetext missing/actionable rows, strict canonicalization candidates, and non-exempt current-key backlog items fail the job.
 
 ## Improving the QA system
 

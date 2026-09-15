@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "game_version": "2.17.0",
+  "surface": "localify",
+  "resource": "localizetext",
+  "format": "gzip-compressed JSON object: table -> key -> source text",
+  "tables": 5631,
+  "rows": 138036,
+  "uncompressed_bytes": 11440346,
+  "uncompressed_sha256": "33fe9de689b3ad0a3a94a6fce5f5805bca523d320f78286d9fc09a2c5999f99f",
+  "gzip_bytes": 1608317,
+  "gzip_sha256": "2677795360fe429d0c182b7f1ade03677bd706fbcb02ac03be58df054282a3b8",
+  "provenance": "current-client-resource-snapshot",
+  "privacy": "source text only; no local paths, accounts, runtime logs, or private integration metadata",
+  "qa_scope": {
+    "definition": "table/key intersection of historical public DumpData localify coverage with the current 2.17 localizetext source universe; source values always come from current 2.17",
+    "tables": 1629,
+    "rows": 39711,
+    "uncompressed_bytes": 2908600,
+    "uncompressed_sha256": "1820ce21a5dae2087f74e11ee12b35d600b6c277b4ea83f4c7b2b610053de15d",
+    "gzip_bytes": 455641,
+    "gzip_sha256": "fc8e1e9ea60ba46cfda605e5c0566d4310db74d749a65b54c20436fbdbd24c6e",
+    "historical_scope_rows": 44860,
+    "obsolete_historical_rows_excluded": 5149
+  },
+  "historical_dumpdata_comparison": {
+    "historical_rows": 44860,
+    "rows_still_present_current": 39711,
+    "obsolete_historical_rows": 5149,
+    "unchanged_source_values_on_overlap": 36115,
+    "changed_source_values_on_overlap": 3596,
+    "changed_source_percent_on_overlap": 9.06,
+    "current_rows_absent_from_historical_dump": 98325,
+    "note": "Comparison is by stable localify table/key identity. Current snapshot values are authoritative for SCSP 2.17.0; historical DumpData remains useful only as legacy/reference coverage."
+  }
+}
