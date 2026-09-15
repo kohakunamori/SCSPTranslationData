@@ -19,8 +19,9 @@ from qa_common import (
     load_json,
     load_policy,
     lyric_translation_only,
-    numeric_signature,
+    numeric_signatures_match,
     percentage_signature,
+    reviewed_semantic_exception,
     resolve_dump_ref,
     write_json,
 )
@@ -195,7 +196,12 @@ def build_items(dump_ref: str | None) -> tuple[list[dict[str, Any]], dict[str, A
                     detail=f"{component}: source={a[component]} translation={b[component]}",
                 )
 
-            if numeric_signature(source) != numeric_signature(target):
+            if (
+                not numeric_signatures_match(source, target)
+                and not reviewed_semantic_exception(
+                    rules, "numeric-signature", surface, source, target
+                )
+            ):
                 add_item(
                     items,
                     backlog_policy,
@@ -208,7 +214,12 @@ def build_items(dump_ref: str | None) -> tuple[list[dict[str, Any]], dict[str, A
                     provenance=provenance,
                     detail="numeric token multiset differs",
                 )
-            if percentage_signature(source) != percentage_signature(target):
+            if (
+                percentage_signature(source) != percentage_signature(target)
+                and not reviewed_semantic_exception(
+                    rules, "percentage-signature", surface, source, target
+                )
+            ):
                 add_item(
                     items,
                     backlog_policy,
@@ -383,6 +394,11 @@ def main() -> int:
     ap.add_argument("--priority", action="append", choices=["P1", "P2", "P3"], help="Filter output by priority")
     ap.add_argument("--category", action="append", help="Filter output by backlog category")
     ap.add_argument("--agent-ready-only", action="store_true")
+    ap.add_argument(
+        "--check-current-key",
+        action="store_true",
+        help="Exit non-zero when non-exempt backlog items remain on current source-key surfaces.",
+    )
     ap.add_argument("--max-items", type=int, default=0)
     ap.add_argument("--output", type=Path, default=QA / "generated" / "quality-backlog.jsonl")
     ap.add_argument("--summary", type=Path, default=QA / "generated" / "quality-backlog-summary.json")
@@ -391,6 +407,19 @@ def main() -> int:
 
     dump_ref = resolve_dump_ref(args.dump_ref)
     items, meta = build_items(dump_ref)
+    all_items = list(items)
+    backlog_policy = load_json(QA / "backlog-policy.json")
+    current_key_exempt = set(
+        x
+        for x in backlog_policy.get("current_key_gate_exempt_categories", [])
+        if isinstance(x, str)
+    )
+    current_key_blockers = [
+        item
+        for item in all_items
+        if item.get("source_authority") == "current-key"
+        and item.get("category") not in current_key_exempt
+    ]
 
     if args.priority:
         allowed_priorities = set(args.priority)
@@ -427,6 +456,10 @@ def main() -> int:
             "agent_ready_only": bool(args.agent_ready_only),
             "max_items": args.max_items,
         },
+        "current_key_gate": {
+            "blocker_count": len(current_key_blockers),
+            "exempt_categories": sorted(current_key_exempt),
+        },
         "output": args.output.resolve().relative_to(QA.parent.resolve()).as_posix()
         if args.output.resolve().is_relative_to(QA.parent.resolve())
         else args.output.name,
@@ -434,6 +467,8 @@ def main() -> int:
     write_json(args.summary, summary)
     args.markdown.write_text(markdown_summary(summary), encoding="utf-8", newline="\n")
     print(json.dumps(summary, ensure_ascii=False, indent=2))
+    if args.check_current_key and current_key_blockers:
+        return 1
     return 0
 
 

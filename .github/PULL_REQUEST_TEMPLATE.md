@@ -27,7 +27,8 @@ Run before submitting:
 ```bash
 python -m unittest discover -s tools -p "test_*.py"
 python tools/qa.py
-python tools/build_quality_backlog.py
+python tools/canonicalize_exact_source_conflicts.py --check
+python tools/build_quality_backlog.py --check-current-key
 git diff --check
 ```
 
@@ -38,6 +39,8 @@ Report:
 - Review warnings after:
 - Backlog tasks before:
 - Backlog tasks after:
+- Current-key blockers:
+- Strict canonicalization candidates:
 - Relevant backlog IDs/categories:
 
 ## Review notes

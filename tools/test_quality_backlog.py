@@ -49,6 +49,16 @@ class QualityBacklogTests(unittest.TestCase):
         for row in self.items:
             self.assertTrue(required.issubset(row))
 
+    def test_current_key_backlog_is_clean_except_reviewed_baseline(self) -> None:
+        allowed = {"baseline-format"}
+        blockers = [
+            row
+            for row in self.items
+            if row.get("source_authority") == "current-key"
+            and row.get("category") not in allowed
+        ]
+        self.assertEqual(blockers, [])
+
     def test_source_authority_requires_historical_verification(self) -> None:
         historical = [
             row for row in self.items

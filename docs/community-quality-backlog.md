@@ -109,7 +109,8 @@ Generated items make this explicit when provenance is available:
 6. Run:
    ```bash
    python tools/qa.py
-   python tools/build_quality_backlog.py
+   python tools/canonicalize_exact_source_conflicts.py --check
+   python tools/build_quality_backlog.py --check-current-key
    git diff --check
    ```
 7. Confirm the target backlog item disappears or is intentionally reclassified.
@@ -125,6 +126,7 @@ If an item is intentional, prefer the narrowest public policy representation:
 - canonical name -> `qa/names.json`; names whose canonical source/translation are the same are automatically treated as reviewed same-form, including ordinary/NBSP/full-width spacing variants;
 - terminology -> `qa/glossary.json`;
 - allowed kana-bearing title/brand -> `kana_preserve_terms` in `qa/glossary.json`;
+- exact semantic numeric/layout equivalence that cannot be generalized safely -> an exact `reviewed_semantic_exceptions` entry in `qa/rules.json`;
 - pre-existing structural/format anomaly -> `qa/baseline-exceptions.json` only when it genuinely predates the public QA gate.
 
 Do not add broad ignore patterns simply to reduce counts.
@@ -143,4 +145,41 @@ The generated summary, not a hard-coded number in documentation, is the authorit
 
 ## Verified checkpoint
 
-At the September 15, 2026 public-QA checkpoint after initial false-positive cleanup and ten exact-source terminology consistency fixes, the full repository QA is **0 hard errors / 2,507 review warnings**. The deduplicated backlog is **2,460 tasks**: **35 P1 / 1,471 P2 / 954 P3**. Regenerate locally for the current authoritative counts.
+At the September 15, 2026 current-source closure checkpoint, the full repository QA is **0 hard errors / 2,077 review warnings**. The deduplicated backlog is **2,030 tasks**: **35 P1 / 1,084 P2 / 911 P3**.
+
+At this checkpoint:
+
+- the strict exact-source canonicalizer reports **0 candidates**;
+- the `current-key` backlog gate reports **0 blockers**; the only current-key item is the explicitly grandfathered legacy `baseline-format` fixture;
+- the default Agent batch has **0 verified-current unresolved records**;
+- **732 historical Dump-only sources / 2,020 occurrences** remain isolated until their source is verified against a current client dump;
+- the remaining repository backlog is therefore historical-reference debt plus the one documented baseline fixture, not a claim that all 2,077 warnings are defects in the current client.
+
+Regenerate locally for authoritative current counts.
+
+## Exact-source canonicalization
+
+The repository includes a deliberately narrow helper:
+
+```bash
+python tools/canonicalize_exact_source_conflicts.py
+```
+
+It emits a proposal only. A candidate must satisfy all of the following:
+
+- exact Japanese source identity;
+- exactly two maintained targets;
+- `local2` is the sole divergent target;
+- every other maintained occurrence is `localify` and unanimously uses one target;
+- the difference is not only ordinary/NBSP/full-width spacing;
+- protected tokens, tags, LF/CR/NBSP structure, numeric semantics, and percentages are compatible.
+
+After review, maintainers may apply the deterministic proposal with `--apply`. CI runs `--check` and fails if such mechanically closable conflicts are reintroduced.
+
+## Current-source gate
+
+```bash
+python tools/build_quality_backlog.py --check-current-key
+```
+
+This gate considers only backlog entries with `source_authority=current-key`. Categories listed in `current_key_gate_exempt_categories` are explicit reviewed baselines; all other current-key items fail the command. Historical `DumpData` warnings remain visible without being promoted to current-source blockers.

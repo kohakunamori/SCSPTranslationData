@@ -31,7 +31,9 @@
         "properties": {
           "surface": {"type": "string", "enum": ["localify", "local2", "lyrics", "scenario"]},
           "identity": {"type": "string"},
-          "provenance": {"type": "string"}
+          "provenance": {"type": "string"},
+          "source_authority": {"type": "string", "enum": ["current-key", "verified-dump"]},
+          "requires_source_verification": {"type": "boolean"}
         },
         "additionalProperties": false
       }

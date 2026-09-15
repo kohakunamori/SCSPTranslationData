@@ -55,7 +55,10 @@ Do not mass-reformat JSON files in a translation-only PR.
 Run:
 
 ```bash
+python -m unittest discover -s tools -p "test_*.py"
 python tools/qa.py
+python tools/canonicalize_exact_source_conflicts.py --check
+python tools/build_quality_backlog.py --check-current-key
 git diff --check
 ```
 
@@ -76,6 +79,14 @@ For an actionable, deduplicated quality-debt view:
 ```bash
 python tools/build_quality_backlog.py
 ```
+
+For exact-source conflicts, preview the repository's conservative canonicalization proposal with:
+
+```bash
+python tools/canonicalize_exact_source_conflicts.py
+```
+
+Do not use `--apply` as a general translation command. The tool only handles the narrow two-way/local2-outlier case documented in `AGENTS.md`.
 
 When a PR is specifically fixing quality debt, include the affected backlog IDs or category/priority slice and the before/after backlog counts.
 

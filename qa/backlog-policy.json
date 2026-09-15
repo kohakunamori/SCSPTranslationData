@@ -1,6 +1,9 @@
 {
   "schema_version": 1,
   "description": "Public prioritization policy for translation QA warnings. Priorities express review urgency, not automatic permission to edit.",
+  "current_key_gate_exempt_categories": [
+    "baseline-format"
+  ],
   "priorities": {
     "P1": {
       "meaning": "High-value review: likely untranslated text, residual Japanese, or protected runtime-format risk.",

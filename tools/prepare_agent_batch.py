@@ -88,6 +88,11 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Prepare a model-agnostic translation batch from public SCSP translation data.")
     ap.add_argument("--dump-ref", help="Git ref containing dumps/ (default: auto-detect)")
     ap.add_argument(
+        "--authoritative-dump",
+        action="store_true",
+        help="Treat dump-backed localify/scenario source text as verified current and allow unresolved dump-backed occurrences into the batch.",
+    )
+    ap.add_argument(
         "--surface",
         action="append",
         choices=["localify", "local2", "lyrics", "scenario"],
@@ -123,6 +128,8 @@ def main() -> int:
     skipped_resolved = 0
     skipped_tm = 0
     skipped_conflict = 0
+    skipped_unverified_occurrences = 0
+    skipped_unverified_sources = 0
 
     for source in sorted(groups):
         if not source.strip():
@@ -136,13 +143,24 @@ def main() -> int:
             target_only = semantic_target(rec["surface"], source, target)
             if target == source:
                 if not is_allowed_same_form(source, rec["surface"], allowed, names):
-                    unresolved.append(rec)
+                    if rec["provenance"] == "current-source-key" or args.authoritative_dump:
+                        unresolved.append(rec)
+                    else:
+                        skipped_unverified_occurrences += 1
                 else:
                     skipped_allowed += 1
             elif target_only and target_only != source:
                 existing_targets.add(target_only)
 
         if not unresolved:
+            if any(
+                rec["translation"] == source
+                and not is_allowed_same_form(source, rec["surface"], allowed, names)
+                and rec["provenance"] != "current-source-key"
+                for rec in occurrences
+            ):
+                skipped_unverified_sources += 1
+                continue
             skipped_resolved += 1
             continue
 
@@ -164,10 +182,13 @@ def main() -> int:
 
         occurrence_rows = []
         for rec in unresolved:
+            current_key = rec["provenance"] == "current-source-key"
             occurrence_rows.append({
                 "surface": rec["surface"],
                 "identity": rec["identity"],
                 "provenance": rec["provenance"],
+                "source_authority": "current-key" if current_key else "verified-dump",
+                "requires_source_verification": False,
             })
         occurrence_rows.sort(key=lambda x: (x["surface"], x["identity"]))
         occurrence_surfaces = {x["surface"] for x in occurrence_rows}
@@ -211,6 +232,7 @@ def main() -> int:
     summary = {
         "schema_version": 1,
         "dump_ref": dump_ref,
+        "authoritative_dump": bool(args.authoritative_dump),
         "surfaces": sorted(selected_surfaces) if selected_surfaces else ["localify", "local2", "lyrics", "scenario"],
         "counts": dict(sorted(counts.items())),
         "skipped": {
@@ -218,6 +240,8 @@ def main() -> int:
             "already_resolved_sources": skipped_resolved,
             "tm_candidate_sources": skipped_tm,
             "conflict_sources": skipped_conflict,
+            "unverified_dump_occurrences": skipped_unverified_occurrences,
+            "unverified_dump_sources": skipped_unverified_sources,
         },
         "output": args.output.resolve().relative_to(QA.parent.resolve()).as_posix()
         if args.output.resolve().is_relative_to(QA.parent.resolve())

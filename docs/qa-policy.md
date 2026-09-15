@@ -53,6 +53,10 @@ Exact-source conflicts are split by semantics: if maintained outputs differ only
 
 Backlog entries with historical `DumpData` provenance carry `requires_source_verification=true`. This is especially important for protected-format and numeric findings: a P1/P2 priority indicates review value, not permission to repair against a stale source snapshot.
 
+Numeric comparison is intentionally asymmetric. Explicit Arabic/full-width numeric tokens in the source remain the anchor; target-side Chinese forms are used only to fill those source-token deficits for reviewed patterns such as `4 → 四名`, `2 → 两行`, `1 → 第一季`, `10 → 十次`, and `2倍 → 翻倍`. Chinese numerals are not independently harvested from arbitrary target prose, avoiding false positives such as `上一个`.
+
+When a semantic equivalence is real but too context-specific to generalize, `qa/rules.json` may contain an exact `reviewed_semantic_exceptions` row keyed by QA code, surface, exact source, and exact translation. Broad ignore patterns are not acceptable.
+
 Warnings are converted into stable, deduplicated community review tasks with:
 
 ```bash
@@ -108,6 +112,16 @@ The memory includes stable public identity and provenance. Conflict entries must
 
 Generated summaries use repository-relative paths so they do not leak a contributor's local filesystem layout.
 
+## Exact-source canonicalization
+
+`tools/canonicalize_exact_source_conflicts.py` handles one conservative consistency case: `local2` is the sole outlier in a two-target exact-source conflict while every `localify` occurrence unanimously uses the other target. Spacing-only variants and any protected/layout/numeric incompatibility are excluded.
+
+The default command writes a proposal only. `--apply` is an explicit mutation, and CI uses `--check` to require the strict candidate set to stay empty.
+
+## Current-key gate
+
+`tools/build_quality_backlog.py --check-current-key` fails when a non-exempt backlog item is sourced from a maintained current source-key surface. The exemption list lives in `qa/backlog-policy.json` and is intentionally narrow. Historical `DumpData` tasks never pass this gate merely because they have a high P1/P2 priority.
+
 ## CI
 
 `.github/workflows/translation-qa.yml` runs the same public `tools/qa.py` entry point used locally.
@@ -117,8 +131,9 @@ CI publishes:
 - a JSON QA report artifact;
 - a Markdown job summary.
 - a generated quality-backlog JSONL and JSON/Markdown summary artifact.
+- an exact-source canonicalization proposal artifact.
 
-Warnings remain visible for community cleanup without blocking unrelated contributions; hard errors fail the job.
+Warnings remain visible for community cleanup without globally blocking historical debt. Hard errors, strict canonicalization candidates, and non-exempt current-key backlog items fail the job.
 
 ## Improving the QA system
 

@@ -11,7 +11,7 @@ from qa_common import (
     format_signature,
     has_kana,
     has_unpreserved_kana,
-    numeric_signature,
+    numeric_signatures_match,
     percentage_signature,
 )
 
@@ -108,7 +108,7 @@ def validate(batch_path: Path, result_path: Path) -> dict[str, Any]:
                 if src_sig[component] != dst_sig[component]:
                     findings.error(f"{sid}: {component} signature changed")
 
-            if numeric_signature(source) != numeric_signature(target):
+            if not numeric_signatures_match(source, target):
                 findings.warning(f"{sid}: numeric signature changed")
             if percentage_signature(source) != percentage_signature(target):
                 findings.warning(f"{sid}: percentage signature changed")

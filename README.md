@@ -63,6 +63,7 @@ GitHub 侧也提供了翻译质量 / source update Issue 表单与 Pull Request 
 - `tools/qa.py`：统一质量检查入口；
 - `tools/build_translation_memory.py`：从公开的 `TransData` 与 `DumpData` 对齐生成 Translation Memory。
 - `tools/build_quality_backlog.py`：把 repository-wide warning 去重并整理成稳定、可筛选的社区质量任务；
+- `tools/canonicalize_exact_source_conflicts.py`：检测严格可复现的 exact-source 双译分叉；默认只生成 proposal，`--apply` 才会修改 `local2.json`；
 - `tools/prepare_agent_batch.py`：把未解决 source 去重后整理成模型无关的 Agent batch；
 - `tools/validate_agent_result.py`：在应用 Agent 输出前验证 source identity、覆盖率和格式签名。
 
@@ -113,6 +114,17 @@ python tools/build_quality_backlog.py \
 
 对于依赖历史 `DumpData` 的任务，backlog 还会标记 `source_authority=historical-reference` 与 `requires_source_verification=true`，提醒 Agent/贡献者先确认当前权威原文，再修复占位符、数字或源文敏感问题。
 
+CI 对当前 source-key 数据还有两道额外质量门：
+
+```bash
+python tools/canonicalize_exact_source_conflicts.py --check
+python tools/build_quality_backlog.py --check-current-key
+```
+
+第一条要求不存在可被严格规则机械闭合的 exact-source 分叉；第二条要求 `current-key` backlog 没有新增 blocker。历史 `DumpData` backlog 不会因此被误当成当前客户端事实。
+
+数字 QA 会保留阿拉伯/全角数字作为锚点，同时识别目标中文中明确的等价表达，例如 `4 → 四名`、`2 → 两行`、`1 → 第一季`、`10 → 十次`、`2倍 → 翻倍`。确有语义等价但无法安全泛化的情况，只能以 `qa/rules.json` 中精确的 source+translation+surface exception 记录。
+
 ### 生成 Translation Memory
 
 ```bash
@@ -132,6 +144,16 @@ python tools/prepare_agent_batch.py
 ```bash
 python tools/prepare_agent_batch.py --include-tm-candidates
 ```
+
+默认 batch 还会排除仅能从历史 `DumpData` 推导 source 的 unresolved localify/scenario 文本。只有已经独立确认某个 dump/ref 与当前客户端一致时，才应显式使用：
+
+```bash
+python tools/prepare_agent_batch.py \
+  --dump-ref <current-source-ref> \
+  --authoritative-dump
+```
+
+在当前公开 checkpoint 中，所有可由维护中的 source-key 直接确认的 unresolved 文本已经闭合，因此默认 batch 可以为空；被排除的历史 Dump-only source 仍需先完成当前客户端 source verification。
 
 Agent 返回 JSONL 后，在写回翻译数据之前先运行：
 

@@ -65,9 +65,10 @@
     },
     {
       "source": "スコア",
-      "preferred": ["分数"],
+      "preferred": ["分数", "最高分", "计分", "技术分"],
       "match": "contains",
-      "scopes": ["localify", "local2", "scenario"]
+      "scopes": ["localify", "local2", "scenario"],
+      "note": "Use 分数 generically; compounds such as ハイスコア, スコアゲージ, and テクニカルスコア may naturally surface as 最高分, 计分, or 技术分."
     },
     {
       "source": "コンボ",

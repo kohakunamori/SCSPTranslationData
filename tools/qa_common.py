@@ -21,6 +21,26 @@ KANA_RE = re.compile(r"[\u3041-\u3096\u309d-\u309f\u30a1-\u30fa\u30fd-\u30ff]")
 HAN_RE = re.compile(r"[\u3400-\u9fff]")
 DIGIT_RE = re.compile(r"\d+(?:\.\d+)?")
 PERCENT_RE = re.compile(r"(?<![A-Za-z])\d+(?:\.\d+)?\s*[%％]")
+CJK_COUNT_RE = re.compile(
+    r"第?([零〇一二三四五六七八九十百千万两兩]+)"
+    r"(?=(?:人|名|次|回|行|季|章|話|话|倍|個|个|枚|件|張|张|首|天|日|年|月|分|秒))"
+)
+CJK_DIGITS = {
+    "零": 0,
+    "〇": 0,
+    "一": 1,
+    "二": 2,
+    "两": 2,
+    "兩": 2,
+    "三": 3,
+    "四": 4,
+    "五": 5,
+    "六": 6,
+    "七": 7,
+    "八": 8,
+    "九": 9,
+}
+CJK_UNITS = {"十": 10, "百": 100, "千": 1000, "万": 10000}
 
 
 def load_json(path: Path) -> Any:
@@ -135,9 +155,88 @@ def format_signature(text: str) -> dict[str, Any]:
     }
 
 
+def parse_cjk_number(token: str) -> int | None:
+    if not token:
+        return None
+    if not any(char in CJK_UNITS for char in token):
+        digits = []
+        for char in token:
+            value = CJK_DIGITS.get(char)
+            if value is None:
+                return None
+            digits.append(str(value))
+        return int("".join(digits)) if digits else None
+
+    result = 0
+    section = 0
+    number = 0
+    for char in token:
+        if char in CJK_DIGITS:
+            number = CJK_DIGITS[char]
+            continue
+        unit = CJK_UNITS.get(char)
+        if unit is None:
+            return None
+        if unit == 10000:
+            section += number
+            result += section * unit
+            section = 0
+            number = 0
+            continue
+        if number == 0:
+            number = 1
+        section += number * unit
+        number = 0
+    return result + section + number
+
+
 def numeric_signature(text: str) -> Counter[str]:
     norm = unicodedata.normalize("NFKC", text)
     return Counter(DIGIT_RE.findall(norm))
+
+
+def cjk_numeric_signature(text: str) -> Counter[str]:
+    norm = unicodedata.normalize("NFKC", text)
+    signature: Counter[str] = Counter()
+    for match in CJK_COUNT_RE.finditer(norm):
+        value = parse_cjk_number(match.group(1))
+        if value is not None:
+            signature[str(value)] += 1
+    signature["2"] += norm.count("翻倍")
+    return signature
+
+
+def numeric_signatures_match(source: str, target: str) -> bool:
+    source_sig = numeric_signature(source)
+    target_sig = numeric_signature(target)
+    if source_sig == target_sig:
+        return True
+
+    # Preserve the original detector's behavior when the source carries no
+    # explicit Arabic/full-width numeric tokens. CJK numerals in natural
+    # Chinese text such as "上一个" must not create new false positives.
+    if not source_sig:
+        return False
+
+    # Target-side Chinese numerals may be a natural rendering of a numeric
+    # source token (4 -> 四名, 2 -> 两行, 1 -> 第一季, 10 -> 十次,
+    # 2倍 -> 翻倍). Use them only to fill deficits from the explicit source
+    # signature; unused CJK numerals are ignored.
+    target_cjk = cjk_numeric_signature(target)
+    remaining = source_sig.copy()
+    for value, count in target_sig.items():
+        remaining[value] -= count
+        if remaining[value] < 0:
+            return False
+    for value in list(remaining):
+        if remaining[value] <= 0:
+            del remaining[value]
+            continue
+        fill = min(remaining[value], target_cjk[value])
+        remaining[value] -= fill
+        if remaining[value] <= 0:
+            del remaining[value]
+    return not remaining
 
 
 def percentage_signature(text: str) -> Counter[str]:
@@ -273,3 +372,23 @@ def load_policy() -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[
         load_json(QA / "names.json"),
         load_json(QA / "allowed-source-equal.json"),
     )
+
+
+def reviewed_semantic_exception(
+    rules: dict[str, Any],
+    code: str,
+    surface: str,
+    source: str,
+    translation: str,
+) -> bool:
+    for row in rules.get("reviewed_semantic_exceptions", []):
+        if not isinstance(row, dict):
+            continue
+        if (
+            row.get("code") == code
+            and row.get("surface") == surface
+            and row.get("source") == source
+            and row.get("translation") == translation
+        ):
+            return True
+    return False

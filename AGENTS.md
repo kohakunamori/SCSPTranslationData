@@ -89,17 +89,35 @@ Recommended flow:
    ```bash
    python tools/prepare_agent_batch.py
    ```
+   By default, this only emits unresolved records whose source identity is available from a maintained source-key surface. If a dump has been independently verified as current, opt in explicitly:
+   ```bash
+   python tools/prepare_agent_batch.py --dump-ref <current-source-ref> --authoritative-dump
+   ```
 8. Validate structured Agent output before applying it:
    ```bash
    python tools/validate_agent_result.py qa/generated/agent-batch.jsonl path/to/result.jsonl
    ```
 9. Review every hard failure and relevant warning.
-10. For quality-debt work, regenerate the backlog and confirm the intended backlog ID disappears or is narrowly reclassified.
-11. Inspect `git diff --check` and the semantic diff before committing.
+10. Check strict exact-source consistency:
+    ```bash
+    python tools/canonicalize_exact_source_conflicts.py --check
+    ```
+11. For quality-debt work, regenerate the backlog and enforce the current-source gate:
+    ```bash
+    python tools/build_quality_backlog.py --check-current-key
+    ```
+    Confirm the intended backlog ID disappears or is narrowly reclassified.
+12. Inspect `git diff --check` and the semantic diff before committing.
 
 Agent output is judged by the same QA gates as human output. Do not merge raw model output without validation.
 
 The public interchange schemas live under `qa/schemas/`. Do not invent a private-only result format when the public schema is sufficient.
+
+Do not use `--authoritative-dump` for the historical `DumpData` branch merely to increase batch size.
+
+`canonicalize_exact_source_conflicts.py` is intentionally conservative. It only proposes a change when `local2` is the sole outlier in a two-way exact-source conflict, all maintained `localify` occurrences unanimously use the other target, the difference is not spacing-only, and protected/layout/numeric signatures are compatible. Review the proposal before using `--apply`.
+
+Numeric QA recognizes a small set of target-side CJK-number equivalents only to satisfy explicit numeric tokens already present in the source. Never broaden this into arbitrary Chinese-number extraction: phrases such as `上一个` must not create a numeric warning.
 
 ## Translation style
 

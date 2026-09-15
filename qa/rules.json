@@ -49,5 +49,14 @@
   "warning_limits": {
     "console_examples_per_code": 12,
     "duplicate_translation_groups": 100
-  }
+  },
+  "reviewed_semantic_exceptions": [
+    {
+      "code": "numeric-signature",
+      "surface": "local2",
+      "source": "1日1回限定",
+      "translation": "每日限定1次",
+      "reason": "每日 semantically carries the source's one-day cadence; the explicit 1 before 次 is preserved."
+    }
+  ]
 }

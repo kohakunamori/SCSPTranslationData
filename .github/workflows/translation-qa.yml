@@ -36,10 +36,14 @@ jobs:
             --report qa-report.json \
             --markdown-report qa-report.md
 
-      - name: Build community quality backlog
+      - name: Check exact-source canonicalization
+        run: |
+          python tools/canonicalize_exact_source_conflicts.py --check
+
+      - name: Build and check community quality backlog
         if: always()
         run: |
-          python tools/build_quality_backlog.py
+          python tools/build_quality_backlog.py --check-current-key
 
       - name: Publish job summary
         if: always()
@@ -64,4 +68,5 @@ jobs:
             qa/generated/quality-backlog.jsonl
             qa/generated/quality-backlog-summary.json
             qa/generated/quality-backlog-summary.md
+            qa/generated/exact-source-canonicalization.json
           if-no-files-found: ignore

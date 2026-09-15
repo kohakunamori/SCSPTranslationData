@@ -23,8 +23,9 @@ from qa_common import (
     load_json,
     load_policy,
     lyric_translation_only,
-    numeric_signature,
+    numeric_signatures_match,
     percentage_signature,
+    reviewed_semantic_exception,
     resolve_dump_ref,
 )
 
@@ -256,13 +257,23 @@ def check_format(
             f"{surface}:{ident}: source={src_sig[component]} target={dst_sig[component]}",
         )
 
-    if numeric_signature(source) != numeric_signature(target):
+    if (
+        not numeric_signatures_match(source, target)
+        and not reviewed_semantic_exception(
+            rules, "numeric-signature", surface, source, target
+        )
+    ):
         requested = policy.get("numeric", "warning")
         if requested != "ignore":
             severity = effective_severity(requested, record, authoritative_dump)
             findings.add(severity, "numeric-signature", f"{surface}:{ident}")
 
-    if percentage_signature(source) != percentage_signature(target):
+    if (
+        percentage_signature(source) != percentage_signature(target)
+        and not reviewed_semantic_exception(
+            rules, "percentage-signature", surface, source, target
+        )
+    ):
         requested = policy.get("percentage", "warning")
         if requested != "ignore":
             severity = effective_severity(requested, record, authoritative_dump)

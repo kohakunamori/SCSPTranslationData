@@ -60,6 +60,18 @@ The repository can generate these records directly:
 python tools/prepare_agent_batch.py
 ```
 
+The default batch intentionally excludes unresolved `localify`/scenario records whose Japanese source is known only through the historical `DumpData` reference. If a dump/ref has been independently verified against the current client, it may be enabled explicitly:
+
+```bash
+python tools/prepare_agent_batch.py \
+  --dump-ref <current-source-ref> \
+  --authoritative-dump
+```
+
+Never mark historical `DumpData` authoritative simply to make more rows available to an Agent.
+
+If all maintained source-key text is already resolved, the default Agent batch can legitimately be empty. This does not mean historical `localify`/scenario backlog is solved; it means that work is intentionally blocked on current-source verification.
+
 The canonical public record schema is `qa/schemas/agent-batch-record.schema.json`.
 
 ## Translation memory
@@ -108,6 +120,15 @@ python tools/validate_agent_result.py \
 ```
 
 This checks exact source identity and coverage plus protected format signatures. Numeric/percentage changes and residual kana are surfaced as review warnings.
+
+After applying reviewed results, also run:
+
+```bash
+python tools/canonicalize_exact_source_conflicts.py --check
+python tools/build_quality_backlog.py --check-current-key
+```
+
+The first prevents reintroducing mechanically closable exact-source divergence; the second prevents new quality debt on maintained source-key surfaces.
 
 ## Hard validation
 
